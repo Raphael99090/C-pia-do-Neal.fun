@@ -6,10 +6,10 @@ import { RotateCcw, Palette, Trophy, AlertCircle } from "lucide-react";
 type GameState = "start" | "playing" | "gameover";
 
 const COLORS = [
-  { label: "RED", value: "red", hex: "#ef4444", textClass: "text-red-500" },
-  { label: "BLUE", value: "blue", hex: "#3b82f6", textClass: "text-blue-500" },
-  { label: "GREEN", value: "green", hex: "#10b981", textClass: "text-emerald-500" },
-  { label: "YELLOW", value: "yellow", hex: "#eab308", textClass: "text-amber-500" },
+  { label: "VERMELHO", value: "red", hex: "#ef4444", textClass: "text-red-500" },
+  { label: "AZUL", value: "blue", hex: "#3b82f6", textClass: "text-blue-500" },
+  { label: "VERDE", value: "green", hex: "#10b981", textClass: "text-emerald-500" },
+  { label: "AMARELO", value: "yellow", hex: "#eab308", textClass: "text-amber-500" },
 ];
 
 export function ColorGenius() {
@@ -112,7 +112,7 @@ export function ColorGenius() {
         </div>
         <div className="p-6 bg-slate-900/50 border border-slate-800/50 rounded-3xl">
            <p className="text-slate-500 font-bold uppercase tracking-widest text-xs flex items-center gap-2 mb-2">
-             <Trophy size={14} /> Best Score
+             <Trophy size={14} /> Melhor Pontuação
            </p>
            <p className="text-3xl font-bold text-slate-300">{highScore}</p>
         </div>
@@ -128,7 +128,7 @@ export function ColorGenius() {
           </div>
           <div className="flex flex-col items-end">
             <span className="text-slate-500 text-[10px] font-bold uppercase tracking-widest flex items-center gap-1">
-              <Trophy size={10} /> Best
+              <Trophy size={10} /> Melhor
             </span>
             <span className="text-xl font-bold text-slate-200">{highScore}</span>
           </div>
@@ -157,16 +157,16 @@ export function ColorGenius() {
                 <div className="w-20 h-20 bg-rose-500/20 text-rose-500 rounded-3xl flex items-center justify-center mb-6 shadow-[0_0_30px_rgba(244,63,94,0.2)]">
                   <Palette size={40} />
                 </div>
-                <h2 className="text-4xl sm:text-5xl font-black text-white mb-4 tracking-tight">Color Genius</h2>
+                <h2 className="text-4xl sm:text-5xl font-black text-white mb-4 tracking-tight">Gênio das Cores</h2>
                 <div className="flex bg-rose-500/20 text-rose-300 p-3 rounded-lg flex items-center gap-2 mb-8 text-left text-sm">
                    <AlertCircle size={24} className="shrink-0" />
-                   <p className="font-medium">Select the <b>COLOR</b> of the text, not the word it says!</p>
+                   <p className="font-medium">Selecione a <b>COR</b> do texto, não a palavra que está escrita!</p>
                 </div>
                 <button
                   onPointerDown={startGame}
                   className="px-10 py-5 bg-rose-500 text-white font-black uppercase tracking-wider rounded-full shadow-[0_0_30px_rgba(244,63,94,0.4)] hover:scale-105 active:scale-95 transition-all outline-none text-xl"
                 >
-                  PLAY NOW
+                  JOGAR AGORA
                 </button>
               </motion.div>
             )}
@@ -203,8 +203,8 @@ export function ColorGenius() {
                 animate={{ opacity: 1, backdropFilter: "blur(8px)" }}
                 className="absolute inset-0 bg-slate-950/90 z-20 flex flex-col items-center justify-center p-6 text-center"
               >
-                <h2 className="text-5xl font-black text-white mb-2 uppercase tracking-tighter text-rose-500">Brain Fried!</h2>
-                <p className="text-slate-400 font-bold tracking-widest uppercase text-sm mb-8">Final Score</p>
+                <h2 className="text-5xl font-black text-white mb-2 uppercase tracking-tighter text-rose-500">Cérebro Frito!</h2>
+                <p className="text-slate-400 font-bold tracking-widest uppercase text-sm mb-8">Pontuação Final</p>
                 
                 <div className="text-8xl font-black text-white mb-12 drop-shadow-[0_0_40px_rgba(244,63,94,0.4)]">
                   {score}
@@ -214,7 +214,7 @@ export function ColorGenius() {
                   onPointerDown={startGame}
                   className="flex items-center gap-2 px-8 py-4 bg-white text-slate-900 font-black uppercase tracking-wider rounded-full shadow-[0_0_30px_rgba(255,255,255,0.3)] hover:scale-105 active:scale-95 transition-all outline-none text-lg"
                 >
-                  <RotateCcw size={24} /> Play Again
+                  <RotateCcw size={24} /> Jogar Novamente
                 </button>
               </motion.div>
             )}

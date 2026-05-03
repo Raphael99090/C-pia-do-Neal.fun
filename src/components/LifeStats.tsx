@@ -16,12 +16,9 @@ export function LifeStats() {
     const timer = setInterval(() => {
       try {
         if (!birthDate) return;
-        const birth = new Date(birthDate);
-        if (isNaN(birth.getTime())) {
-          setStats(null);
-          return;
-        }
-
+        // Correcting Date parsing to local time
+        const [y, m, d] = birthDate.split('-').map(Number);
+        const birth = new Date(y, m - 1, d);
         const now = new Date();
         const diffMs = now.getTime() - birth.getTime();
         
@@ -33,7 +30,26 @@ export function LifeStats() {
         const seconds = diffMs / 1000;
         const days = seconds / (60 * 60 * 24);
 
+        // Age components
+        let years = now.getFullYear() - birth.getFullYear();
+        let months = now.getMonth() - birth.getMonth();
+        let ageDays = now.getDate() - birth.getDate();
+
+        if (ageDays < 0) {
+          months--;
+          const lastMonth = new Date(now.getFullYear(), now.getMonth(), 0);
+          ageDays += lastMonth.getDate();
+        }
+        if (months < 0) {
+          years--;
+          months += 12;
+        }
+
         setStats({
+          years,
+          months,
+          days: ageDays,
+          totalDays: Math.floor(days),
           heartbeats: Math.floor(seconds * (72 / 60)),
           breaths: Math.floor(seconds * (16 / 60)),
           blinks: Math.floor(seconds * (15 / 60)),
@@ -163,6 +179,27 @@ export function LifeStats() {
                 </motion.div>
             )}
         </div>
+
+        {stats && (
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8 w-full max-w-4xl">
+                 <div className="bg-white/5 p-4 rounded-3xl border border-white/5 flex flex-col items-center">
+                    <div className="text-[8px] font-black text-slate-500 uppercase tracking-widest mb-1">Anos</div>
+                    <div className="text-2xl font-black text-white">{stats.years}</div>
+                 </div>
+                 <div className="bg-white/5 p-4 rounded-3xl border border-white/5 flex flex-col items-center">
+                    <div className="text-[8px] font-black text-slate-500 uppercase tracking-widest mb-1">Meses</div>
+                    <div className="text-2xl font-black text-white">{stats.months}</div>
+                 </div>
+                 <div className="bg-white/5 p-4 rounded-3xl border border-white/5 flex flex-col items-center">
+                    <div className="text-[8px] font-black text-slate-500 uppercase tracking-widest mb-1">Dias</div>
+                    <div className="text-2xl font-black text-white">{stats.days}</div>
+                 </div>
+                 <div className="bg-white/5 p-4 rounded-3xl border border-white/5 flex flex-col items-center">
+                    <div className="text-[8px] font-black text-slate-500 uppercase tracking-widest mb-1">Total Dias</div>
+                    <div className="text-2xl font-black text-white">{stats.totalDays.toLocaleString()}</div>
+                 </div>
+            </div>
+        )}
 
         {stats && (
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-32">

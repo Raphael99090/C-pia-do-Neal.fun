@@ -6,31 +6,31 @@ import { RotateCcw, BookOpen, Trophy, Check, X } from "lucide-react";
 type GameState = "start" | "playing" | "gameover";
 
 const VOCAB_DATA = [
-  { word: "Inexorable", meaning: "Impossible to stop or prevent", wrong: ["Moving very slowly", "Able to be easily modified", "Showing great emotion"] },
-  { word: "Ephemeral", meaning: "Lasting for a very short time", wrong: ["Glowing in the dark", "Extremely powerful", "Found everywhere"] },
-  { word: "Ubiquitous", meaning: "Present, appearing, or found everywhere", wrong: ["Rare and valuable", "Extremely dangerous", "Hidden from sight"] },
-  { word: "Quixotic", meaning: "Exceedingly idealistic; unrealistic", wrong: ["Quick to anger", "Highly intelligent", "Moving with great speed"] },
-  { word: "Sycophant", meaning: "A person who flatters to gain advantage", wrong: ["A brilliant musician", "A type of ancient weapon", "Someone who loves the rain"] },
-  { word: "Cacophony", meaning: "A harsh, discordant mixture of sounds", wrong: ["A beautiful song", "A type of sweet dessert", "A state of deep sleep"] },
-  { word: "Enigma", meaning: "Something mysterious and difficult to understand", wrong: ["A large flying insect", "A clear and obvious truth", "A medical condition"] },
-  { word: "Zenith", meaning: "The time of most power or success", wrong: ["The lowest point possible", "A type of ancient compass", "A feeling of deep sorrow"] },
-  { word: "Lethargic", meaning: "Affected by sluggishness and apathy", wrong: ["Full of energy", "Highly contagious", "Sharp and cutting"] },
-  { word: "Eloquent", meaning: "Fluent or persuasive in speaking", wrong: ["Clumsy and awkward", "Quiet and shy", "Bright and colorful"] },
-  { word: "Serendipity", meaning: "The occurrence of happy events by chance", wrong: ["A deep feeling of regret", "A planned and calculated move", "A severe thunderstorm"] },
-  { word: "Pragmatic", meaning: "Dealing with things sensibly and realistically", wrong: ["Lost in daydreams", "Strictly following rules", "Easily angered"] },
-  { word: "Paradox", meaning: "A seemingly absurd but true statement", wrong: ["A standard pattern", "A long journey", "A type of geometric shape"] },
-  { word: "Melancholy", meaning: "A feeling of pensive sadness", wrong: ["Joyful celebration", "A juicy fruit", "A fast-paced dance"] },
-  { word: "Esoteric", meaning: "Understood by only a few people", wrong: ["Widely known by everyone", "Found in the ocean", "Related to outer space"] },
-  { word: "Alacrity", meaning: "Brisk and cheerful readiness", wrong: ["Deep reluctance", "A type of mineral", "Extreme poverty"] },
-  { word: "Pernicious", meaning: "Having a harmful effect, often gradually", wrong: ["Helpful and kind", "Loud and annoying", "Sweet tasting"] },
-  { word: "Obfuscate", meaning: "Render obscure, unclear, or unintelligible", wrong: ["To make perfectly clear", "To build a strong foundation", "To fly at high altitudes"] },
-  { word: "Iconoclast", meaning: "A person who attacks cherished beliefs", wrong: ["A builder of monuments", "A devoted follower", "A collector of rare coins"] },
-  { word: "Pedantic", meaning: "Excessively concerned with minor details", wrong: ["Careless and sloppy", "Incredibly generous", "Physically strong"] },
-  { word: "Ostentatious", meaning: "Designed to impress or attract notice", wrong: ["Hidden and secretive", "Very quiet and shy", "Lacking any color"] },
-  { word: "Mellifluous", meaning: "Sweet or musical; pleasant to hear", wrong: ["Rough and scratchy", "Smelling like flowers", "Tasting extremely bitter"] },
-  { word: "Ineffable", meaning: "Too great or extreme to be expressed in words", wrong: ["Easily forgotten", "Not capable of being erased", "Very talkative"] },
-  { word: "Fastidious", meaning: "Very attentive to and concerned about accuracy", wrong: ["Rushing without thinking", "Sleeping very deeply", "Eating very quickly"] },
-  { word: "Defenestrate", meaning: "To throw someone out of a window", wrong: ["To build a new fence", "To plant a large garden", "To lock all the doors"] }
+  { word: "Inexorável", meaning: "Impossível de deter ou de evitar", wrong: ["Que se move muito devagar", "Fácil de ser modificado", "Que demonstra muita emoção"] },
+  { word: "Efêmero", meaning: "Que dura apenas um tempo muito curto", wrong: ["Que brilha no escuro", "Extremamente poderoso", "Encontrado em todo lugar"] },
+  { word: "Ubíquo", meaning: "Presente ou encontrado em todo lugar ao mesmo tempo", wrong: ["Raro e valioso", "Extremamente perigoso", "Escondido da vista"] },
+  { word: "Quixotesco", meaning: "Excessivamente idealista; irrealista", wrong: ["Irritável", "Altamente inteligente", "Rápido"] },
+  { word: "Sicomofanta", meaning: "Pessoa que bajula para obter vantagem", wrong: ["Um músico brilhante", "Um tipo de arma antiga", "Alguém que ama a chuva"] },
+  { word: "Cacofonia", meaning: "Mistura áspera e dissonante de sons", wrong: ["Uma canção bonita", "Um tipo de sobremesa doce", "Estado de sono profundo"] },
+  { word: "Enigma", meaning: "Algo misterioso e difícil de entender", wrong: ["Um grande inseto voador", "Uma verdade clara e óbvia", "Uma condição médica"] },
+  { word: "Zênite", meaning: "O ponto mais alto; o auge", wrong: ["O ponto mais baixo possível", "Um tipo de bússola antiga", "Sentimento de profunda tristeza"] },
+  { word: "Letárgico", meaning: "Afetado por lentidão e apatia", wrong: ["Cheio de energia", "Altamente contagioso", "Afiado e cortante"] },
+  { word: "Eloquente", meaning: "Fluente ou persuasivo ao falar", wrong: ["Desajeitado e estranho", "Quieto e tímido", "Brilhante e colorido"] },
+  { word: "Serendipidade", meaning: "Descoberta afortunada feita por acaso", wrong: ["Sentimento profundo de arrependimento", "Um movimento planejado e calculado", "Uma tempestade severa"] },
+  { word: "Pragmático", meaning: "Que lida com as coisas de forma prática e realista", wrong: ["Perdido em devaneios", "Que segue regras estritamente", "Facilmente irritável"] },
+  { word: "Paradoxo", meaning: "Declaração aparentemente absurda, mas verdadeira", wrong: ["Um padrão padrão", "Uma longa jornada", "Um tipo de forma geométrica"] },
+  { word: "Melancolia", meaning: "Sentimento de tristeza profunda e pensativa", wrong: ["Celebração alegre", "Uma fruta suculenta", "Uma dança de ritmo acelerado"] },
+  { word: "Esotérico", meaning: "Compreendido por apenas um pequeno grupo", wrong: ["Amplamente conhecido por todos", "Encontrado no oceano", "Relacionado ao espaço sideral"] },
+  { word: "Alacridade", meaning: "Prontidão rápida e alegre", wrong: ["Relutância profunda", "Um tipo de mineral", "Extrema pobreza"] },
+  { word: "Pernicioso", meaning: "Que causa danos graves, muitas vezes de forma gradual", wrong: ["Útil e gentil", "Barulhento e irritante", "Com sabor doce"] },
+  { word: "Ofuscar", meaning: "Tornar obscuro, confuso ou ininteligível", wrong: ["Tornar perfeitamente claro", "Construir uma base sólida", "Voar em grandes altitudes"] },
+  { word: "Iconoclasta", meaning: "Pessoa que ataca crenças ou instituições estabelecidas", wrong: ["Um construtor de monumentos", "Um seguidor devoto", "Um colecionador de moedas raras"] },
+  { word: "Pedante", meaning: "Excessivamente preocupado com detalhes menores", wrong: ["Descuidado e desleixado", "Inrivelmente generoso", "Fisicamente forte"] },
+  { word: "Ostensivo", meaning: "Feito para impressionar ou atrair a atenção", wrong: ["Escondido e secreto", "Muito quieto e tímido", "Sem qualquer cor"] },
+  { word: "Melífluo", meaning: "Doce ou musical; agradável de ouvir", wrong: ["Áspero e arranhado", "Com cheiro de flores", "Com gosto muito amargo"] },
+  { word: "Inefável", meaning: "Grande demais para ser expresso em palavras", wrong: ["Esquecido facilmente", "Incapaz de ser apagado", "Muito falante"] },
+  { word: "Fastidioso", meaning: "Muito atento e preocupado com a precisão", wrong: ["Correndo sem pensar", "Dormindo muito profundamente", "Comendo muito rápido"] },
+  { word: "Defenestrar", meaning: "Atirar alguém ou algo pela janela", wrong: ["Construir uma nova cerca", "Plantar um grande jardim", "Trancar todas as portas"] }
 ];
 
 // Fisher-Yates Shuffle
@@ -148,14 +148,14 @@ export function VocabMaster() {
         </div>
         <div className="p-6 bg-slate-900/50 border border-slate-800/50 rounded-3xl">
            <p className="text-slate-500 font-bold uppercase tracking-widest text-xs flex items-center gap-2 mb-2">
-             <Trophy size={14} /> Best Score
+             <Trophy size={14} /> Melhor Pontuação
            </p>
            <p className="text-3xl font-bold text-slate-300">{highScore}</p>
         </div>
         
         {/* Lives desktop indicator */}
         <div className="p-6 bg-slate-900/50 border border-slate-800/50 rounded-3xl mt-auto">
-          <p className="text-slate-500 font-bold uppercase tracking-widest text-xs mb-4">Lives</p>
+          <p className="text-slate-500 font-bold uppercase tracking-widest text-xs mb-4">Vidas</p>
           <div className="flex gap-3">
              {[1, 2, 3].map(i => (
                <div 
@@ -205,15 +205,15 @@ export function VocabMaster() {
                 <div className="w-20 h-20 bg-amber-500/20 text-amber-500 rounded-3xl flex items-center justify-center mb-6 shadow-[0_0_30px_rgba(245,158,11,0.2)]">
                   <BookOpen size={40} />
                 </div>
-                <h2 className="text-4xl sm:text-5xl font-black text-white mb-4 tracking-tight drop-shadow-xl">Vocab Master</h2>
+                <h2 className="text-4xl sm:text-5xl font-black text-white mb-4 tracking-tight drop-shadow-xl">Mestre das Palavras</h2>
                 <p className="text-slate-400 font-medium mb-12 max-w-sm text-lg">
-                  Guess the exact meaning of difficult and sophisticated words.
+                  Adivinhe o significado exato de palavras difíceis e sofisticadas.
                 </p>
                 <button
                   onPointerDown={startGame}
                   className="px-10 py-5 bg-amber-500 text-white font-black uppercase tracking-wider rounded-full shadow-[0_0_30px_rgba(245,158,11,0.4)] hover:scale-105 active:scale-95 transition-all outline-none text-xl"
                 >
-                  START LEARNING
+                  COMEÇAR A APRENDER
                 </button>
               </motion.div>
             )}
@@ -228,7 +228,7 @@ export function VocabMaster() {
                 className="flex-1 flex flex-col w-full h-full"
               >
                  <div className="flex-1 flex flex-col items-center justify-center py-6 sm:py-8">
-                    <p className="text-slate-500 text-sm font-bold uppercase tracking-widest mb-4">What does this mean?</p>
+                    <p className="text-slate-500 text-sm font-bold uppercase tracking-widest mb-4">O que isso significa?</p>
                     <h3 className="text-4xl sm:text-5xl md:text-6xl font-black text-white tracking-tight break-all text-center">
                       “{currentQuestion.word}”
                     </h3>
@@ -278,8 +278,8 @@ export function VocabMaster() {
                 animate={{ opacity: 1, backdropFilter: "blur(8px)" }}
                 className="absolute inset-0 bg-slate-950/90 z-20 flex flex-col items-center justify-center p-6 text-center"
               >
-                <h2 className="text-5xl font-black text-white mb-2 uppercase tracking-tighter">Vocab Depleted</h2>
-                <p className="text-amber-500 font-bold tracking-widest uppercase text-sm mb-8">Final Score</p>
+                <h2 className="text-5xl font-black text-white mb-2 uppercase tracking-tighter">Vocabulário Esgotado</h2>
+                <p className="text-amber-500 font-bold tracking-widest uppercase text-sm mb-8">Pontuação Final</p>
                 
                 <div className="text-7xl sm:text-8xl font-black text-white mb-12 drop-shadow-[0_0_40px_rgba(245,158,11,0.4)]">
                   {score}
@@ -289,7 +289,7 @@ export function VocabMaster() {
                   onPointerDown={startGame}
                   className="flex items-center gap-2 px-8 py-4 bg-white text-slate-900 font-black uppercase tracking-wider rounded-full shadow-[0_0_30px_rgba(255,255,255,0.3)] hover:scale-105 active:scale-95 transition-all outline-none text-lg"
                 >
-                  <RotateCcw size={24} /> Play Again
+                  <RotateCcw size={24} /> Jogar Novamente
                 </button>
               </motion.div>
             )}
