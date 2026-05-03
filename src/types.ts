@@ -1,0 +1,91 @@
+export enum ElementType {
+  EMPTY = 'empty',
+  SAND = 'sand',
+  WATER = 'water',
+  STONE = 'stone',
+  WOOD = 'wood',
+  FIRE = 'fire',
+  SMOKE = 'smoke',
+  OIL = 'oil',
+  GAS = 'gas',
+  STEAM = 'steam',
+  LAVA = 'lava',
+  ICE = 'ice',
+  PLANT = 'plant',
+  ACID = 'acid',
+  METAL = 'metal',
+  GUNPOWDER = 'gunpowder',
+  NITRO = 'nitro',
+  SALT = 'salt',
+  CLAY = 'clay',
+  FUNGUS = 'fungus',
+  GLASS = 'glass',
+  DIRT = 'dirt',
+  SNOW = 'snow',
+  COAL = 'coal',
+  ASH = 'ash',
+  SEED = 'seed',
+  SLIME = 'slime',
+  HONEY = 'honey',
+  SPARK = 'spark',
+  WIRE = 'wire',
+  SPONGE = 'sponge',
+  VIRUS = 'virus',
+  NEON = 'neon',
+  RUST = 'rust',
+  C4 = 'c4',
+  THERMITE = 'thermite',
+  BLOOD = 'blood',
+}
+
+export interface ElementProperties {
+  type: ElementType;
+  color: string;
+  density: number; // For floating/sinking
+  state: 'solid' | 'liquid' | 'gas' | 'immobile' | 'energy';
+  flammable?: boolean;
+  burnRate?: number;
+  lifetime?: number;
+  explosive?: boolean;
+  viscosity?: number; // For liquids like honey/slime
+}
+
+export const ELEMENTS: Record<ElementType, ElementProperties> = {
+  [ElementType.EMPTY]: { type: ElementType.EMPTY, color: '#000000', density: 0, state: 'gas' },
+  [ElementType.SAND]: { type: ElementType.SAND, color: '#f2d16b', density: 10, state: 'solid' },
+  [ElementType.WATER]: { type: ElementType.WATER, color: '#4fa4f4', density: 5, state: 'liquid' },
+  [ElementType.STONE]: { type: ElementType.STONE, color: '#888888', density: 100, state: 'immobile' },
+  [ElementType.WOOD]: { type: ElementType.WOOD, color: '#7a5230', density: 20, state: 'immobile', flammable: true, burnRate: 0.05 },
+  [ElementType.FIRE]: { type: ElementType.FIRE, color: '#ff4500', density: 1, state: 'energy', lifetime: 50 },
+  [ElementType.SMOKE]: { type: ElementType.SMOKE, color: '#444444', density: 0.1, state: 'gas', lifetime: 100 },
+  [ElementType.OIL]: { type: ElementType.OIL, color: '#3b3b1f', density: 4, state: 'liquid', flammable: true, burnRate: 0.4 },
+  [ElementType.GAS]: { type: ElementType.GAS, color: '#aaffaa', density: 0.2, state: 'gas', flammable: true, burnRate: 0.8 },
+  [ElementType.STEAM]: { type: ElementType.STEAM, color: '#ddddff', density: 0.1, state: 'gas', lifetime: 150 },
+  [ElementType.LAVA]: { type: ElementType.LAVA, color: '#ff2200', density: 15, state: 'liquid' },
+  [ElementType.ICE]: { type: ElementType.ICE, color: '#aaddff', density: 8, state: 'immobile' },
+  [ElementType.PLANT]: { type: ElementType.PLANT, color: '#2d5a27', density: 12, state: 'immobile', flammable: true, burnRate: 0.1 },
+  [ElementType.ACID]: { type: ElementType.ACID, color: '#7cfc00', density: 6, state: 'liquid' },
+  [ElementType.METAL]: { type: ElementType.METAL, color: '#b0bcc5', density: 200, state: 'immobile' },
+  [ElementType.GUNPOWDER]: { type: ElementType.GUNPOWDER, color: '#555555', density: 11, state: 'solid', flammable: true, burnRate: 1.0, explosive: true },
+  [ElementType.NITRO]: { type: ElementType.NITRO, color: '#00ff00', density: 3, state: 'liquid', flammable: true, burnRate: 1.0, explosive: true },
+  [ElementType.SALT]: { type: ElementType.SALT, color: '#ffffff', density: 9, state: 'solid' },
+  [ElementType.CLAY]: { type: ElementType.CLAY, color: '#9e5a3c', density: 15, state: 'solid' },
+  [ElementType.FUNGUS]: { type: ElementType.FUNGUS, color: '#7b4b94', density: 1, state: 'immobile' },
+  [ElementType.GLASS]: { type: ElementType.GLASS, color: '#90CBE5', density: 100, state: 'immobile' },
+  [ElementType.DIRT]: { type: ElementType.DIRT, color: '#4a3018', density: 10, state: 'solid' },
+  [ElementType.SNOW]: { type: ElementType.SNOW, color: '#eeeeff', density: 2, state: 'solid' },
+  [ElementType.COAL]: { type: ElementType.COAL, color: '#222222', density: 15, state: 'immobile', flammable: true, burnRate: 0.02 },
+  [ElementType.ASH]: { type: ElementType.ASH, color: '#b2b5b5', density: 3, state: 'solid' },
+  [ElementType.SEED]: { type: ElementType.SEED, color: '#aebf45', density: 9, state: 'solid' },
+  [ElementType.SLIME]: { type: ElementType.SLIME, color: '#50c878', density: 6, state: 'liquid', viscosity: 0.8 },
+  [ElementType.HONEY]: { type: ElementType.HONEY, color: '#ffb300', density: 7, state: 'liquid', viscosity: 0.9, flammable: true, burnRate: 0.05 },
+  [ElementType.SPARK]: { type: ElementType.SPARK, color: '#ffff00', density: 0, state: 'energy', lifetime: 10 },
+  [ElementType.WIRE]: { type: ElementType.WIRE, color: '#d87e36', density: 80, state: 'immobile' },
+  [ElementType.SPONGE]: { type: ElementType.SPONGE, color: '#f5da42', density: 10, state: 'immobile' },
+  [ElementType.VIRUS]: { type: ElementType.VIRUS, color: '#ff00ff', density: 4, state: 'solid' },
+  [ElementType.NEON]: { type: ElementType.NEON, color: '#ff00aa', density: 0.1, state: 'gas' },
+  [ElementType.RUST]: { type: ElementType.RUST, color: '#8a3324', density: 12, state: 'solid' },
+  [ElementType.C4]: { type: ElementType.C4, color: '#dddddd', density: 20, state: 'immobile', explosive: true },
+  [ElementType.THERMITE]: { type: ElementType.THERMITE, color: '#b93b3b', density: 15, state: 'solid' },
+  [ElementType.BLOOD]: { type: ElementType.BLOOD, color: '#aa0000', density: 6, state: 'liquid' },
+};
