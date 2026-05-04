@@ -112,7 +112,7 @@ export function PixelStudio() {
 
   return (
     <div 
-      className="w-full h-full flex flex-col items-center justify-center p-4 lg:p-8 touch-none select-none overflow-y-auto"
+      className="w-full h-full flex flex-col items-center justify-center bg-slate-950 p-4 lg:p-8 touch-none select-none overflow-y-auto"
       onPointerUp={handleGlobalUp}
       onPointerLeave={handleGlobalUp}
     >

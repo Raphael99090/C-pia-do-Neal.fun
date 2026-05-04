@@ -114,7 +114,7 @@ export function LifeStats() {
   };
 
   return (
-    <div className="w-full h-full flex flex-col items-center p-4 lg:p-8 overflow-y-auto">
+    <div className="w-full h-full flex flex-col items-center bg-slate-950 p-4 lg:p-8 overflow-y-auto">
       <div className="w-full max-w-4xl flex flex-col gap-8">
         
         <div className="flex flex-col items-center text-center gap-4 mb-8">

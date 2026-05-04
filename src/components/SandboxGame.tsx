@@ -20,6 +20,7 @@ export const SandboxGame: React.FC = () => {
   const [showInfo, setShowInfo] = useState(false);
   const [isDrawing, setIsDrawing] = useState(false);
   const [particleCount, setParticleCount] = useState(0);
+  const [brushDensity, setBrushDensity] = useState(100);
   const animationFrameRef = useRef<number>(0);
 
   // Initialize engine once
@@ -118,7 +119,14 @@ export const SandboxGame: React.FC = () => {
     for (let dy = -brushSize; dy <= brushSize; dy++) {
       for (let dx = -brushSize; dx <= brushSize; dx++) {
         if (dx * dx + dy * dy <= brushSize * brushSize) {
-          engineRef.current.setPixel(x + dx, y + dy, selectedElement);
+          if (Math.random() < brushDensity / 100) {
+            let typeToPlace = selectedElement;
+            if (typeToPlace === ElementType.RANDOM) {
+               const allowedTypes = Object.values(ElementType).filter(t => t !== ElementType.EMPTY && t !== ElementType.RANDOM);
+               typeToPlace = allowedTypes[Math.floor(Math.random() * allowedTypes.length)];
+            }
+            engineRef.current.setPixel(x + dx, y + dy, typeToPlace);
+          }
         }
       }
     }
@@ -192,6 +200,7 @@ export const SandboxGame: React.FC = () => {
         ElementType.C4,
         ElementType.THERMITE,
         ElementType.EMPTY,
+        ElementType.RANDOM,
       ],
     },
   ];
@@ -234,6 +243,7 @@ export const SandboxGame: React.FC = () => {
     [ElementType.RUST]: "🟫",
     [ElementType.C4]: "📦",
     [ElementType.THERMITE]: "🧨",
+    [ElementType.RANDOM]: "🎲",
   };
 
   const [activeCategory, setActiveCategory] = useState(categories[0].name);
@@ -341,7 +351,7 @@ export const SandboxGame: React.FC = () => {
                         </span>
                         <div
                           className="absolute top-1 right-1 md:top-2 md:right-2 w-2 h-2 md:w-3 md:h-3 rounded-full border border-white shadow-sm"
-                          style={{ backgroundColor: props.color }}
+                          style={{ background: props.color }}
                         />
                       </button>
                     );
@@ -350,24 +360,47 @@ export const SandboxGame: React.FC = () => {
             </div>
 
             <div className="mt-4 md:mt-6">
-              <div className="bg-[#F9F9F9] rounded-2xl p-3 md:p-4 border border-dashed border-[#DDD]">
-                <div className="flex justify-between items-center mb-1 md:mb-2 text-[8px] md:text-[10px]">
-                  <span className="font-black text-[#AAA] uppercase tracking-widest">
-                    Pincel
-                  </span>
-                  <span className="font-black text-brand-blue">
-                    {brushSize}px
-                  </span>
+              <div className="bg-[#F9F9F9] rounded-2xl p-3 md:p-4 border border-dashed border-[#DDD] space-y-4">
+                <div>
+                  <div className="flex justify-between items-center mb-1 md:mb-2 text-[8px] md:text-[10px]">
+                    <span className="font-black text-[#AAA] uppercase tracking-widest">
+                      Pincel
+                    </span>
+                    <span className="font-black text-brand-blue">
+                      {brushSize}px
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <input
+                      type="range"
+                      min="1"
+                      max="10"
+                      value={brushSize}
+                      onChange={(e) => setBrushSize(parseInt(e.target.value))}
+                      className="flex-1 accent-brand-blue h-1 md:h-1.5 cursor-pointer"
+                    />
+                  </div>
                 </div>
-                <div className="flex items-center gap-3">
-                  <input
-                    type="range"
-                    min="1"
-                    max="10"
-                    value={brushSize}
-                    onChange={(e) => setBrushSize(parseInt(e.target.value))}
-                    className="flex-1 accent-brand-blue h-1 md:h-1.5 cursor-pointer"
-                  />
+
+                <div>
+                  <div className="flex justify-between items-center mb-1 md:mb-2 text-[8px] md:text-[10px]">
+                    <span className="font-black text-[#AAA] uppercase tracking-widest">
+                      Densidade
+                    </span>
+                    <span className="font-black text-brand-blue">
+                      {brushDensity}%
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <input
+                      type="range"
+                      min="1"
+                      max="100"
+                      value={brushDensity}
+                      onChange={(e) => setBrushDensity(parseInt(e.target.value))}
+                      className="flex-1 accent-brand-blue h-1 md:h-1.5 cursor-pointer"
+                    />
+                  </div>
                 </div>
               </div>
             </div>

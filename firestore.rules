@@ -1,0 +1,48 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Helper functions
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    // Test connection path
+    match /test/connection {
+      allow read: if true;
+    }
+
+    // Recipes: Readable by all, writable by signed-in users if they follow the schema
+    match /alchemy_recipes/{recipeId} {
+      allow read: if true;
+      allow create: if isSignedIn() && 
+        request.resource.data.elements is list && 
+        request.resource.data.elements.size() == 2 &&
+        request.resource.data.resultId is string;
+    }
+
+    // Elements: Readable by all, writable by signed-in users
+    match /alchemy_elements/{elementId} {
+      allow read: if true;
+      allow create: if isSignedIn() && 
+        request.resource.data.name is string &&
+        request.resource.data.name.size() < 100;
+    }
+
+    // Moral Dilemmas: Readable by all, writable by signed-in users
+    match /moral_dilemmas/{dilemmaId} {
+      allow read: if true;
+      allow create: if isSignedIn() &&
+        request.resource.data.title is string &&
+        request.resource.data.scenario is string;
+    }
+
+    // Default deny
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

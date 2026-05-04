@@ -131,7 +131,7 @@ export function ParticleFlow() {
   };
 
   return (
-    <div className="w-full h-full flex flex-col items-center justify-center p-4 lg:p-8">
+    <div className="w-full h-full flex flex-col items-center justify-center bg-slate-950 p-4 lg:p-8">
       <div className="bg-slate-900 border border-slate-800 rounded-[40px] overflow-hidden shadow-2xl flex flex-col w-full max-w-6xl aspect-[16/10] lg:aspect-[21/9] relative group">
         
         {/* Interaction Canvas */}

@@ -45,26 +45,65 @@ export function GravitySandbox() {
     let bArray = [...initialBodies];
 
     const animate = () => {
-      ctx.fillStyle = 'rgba(2, 6, 23, 0.1)'; // Trail effect
+      ctx.fillStyle = 'rgba(2, 6, 23, 0.2)'; // Trail effect
       ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      const bArray = bodiesRef.current;
 
       // Physics
       for (let i = 0; i < bArray.length; i++) {
         for (let j = i + 1; j < bArray.length; j++) {
           const b1 = bArray[i];
           const b2 = bArray[j];
+          if (!b1 || !b2) continue;
+
           const dx = b2.x - b1.x;
           const dy = b2.y - b1.y;
           const distSq = dx * dx + dy * dy;
           const dist = Math.sqrt(distSq);
           
           if (dist < b1.radius + b2.radius) {
-             // Basic collision: bounce or ignore
-             continue;
+             // Collision handling: absorb if mass difference > 50%, or bounce
+             if (b1.mass > b2.mass * 2 || b2.mass > b1.mass * 2) {
+                 const big = b1.mass > b2.mass ? b1 : b2;
+                 const small = b1.mass > b2.mass ? b2 : b1;
+                 
+                 // Conservation of momentum
+                 big.vx = (big.vx * big.mass + small.vx * small.mass) / (big.mass + small.mass);
+                 big.vy = (big.vy * big.mass + small.vy * small.mass) / (big.mass + small.mass);
+                 
+                 big.mass += small.mass * 0.5; // Gain half mass
+                 big.radius = Math.min(60, big.radius + small.radius * 0.2); // Grow slightly
+                 
+                 // Remove small
+                 const smallIndex = bArray.indexOf(small);
+                 if (smallIndex > -1) {
+                     bArray.splice(smallIndex, 1);
+                 }
+                 // Backtrack iterator if necessary, simple break for j loop to avoid out of bounds
+                 break;
+             } else {
+                 // Simple elastic bounce
+                 const nx = dx / dist;
+                 const ny = dy / dist;
+                 const p = 2 * (b1.vx * nx + b1.vy * ny - b2.vx * nx - b2.vy * ny) / (b1.mass + b2.mass);
+                 b1.vx = b1.vx - p * b2.mass * nx;
+                 b1.vy = b1.vy - p * b2.mass * ny;
+                 b2.vx = b2.vx + p * b1.mass * nx;
+                 b2.vy = b2.vy + p * b1.mass * ny;
+
+                 // Move apart to prevent sticking
+                 const overlap = b1.radius + b2.radius - dist + 0.1;
+                 b1.x -= overlap * 0.5 * nx;
+                 b1.y -= overlap * 0.5 * ny;
+                 b2.x += overlap * 0.5 * nx;
+                 b2.y += overlap * 0.5 * ny;
+             }
+             continue; // Forces are chaotic inside collisions
           }
 
           // Softening factor to prevent infinite force at close distances
-          const softening = 400; 
+          const softening = 200; // lower softening for better slingshots
           const force = (G * b1.mass * b2.mass) / (distSq + softening);
           const ax = force * (dx / dist);
           const ay = force * (dy / dist);
@@ -82,7 +121,7 @@ export function GravitySandbox() {
         b.y += b.vy;
 
         // Draw glow
-        ctx.shadowBlur = b.mass > 500 ? 20 : 5;
+        ctx.shadowBlur = b.mass > 500 ? 30 : b.mass > 100 ? 15 : 5;
         ctx.shadowColor = b.color;
         ctx.fillStyle = b.color;
         ctx.beginPath();

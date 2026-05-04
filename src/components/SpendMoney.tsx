@@ -11,17 +11,42 @@ interface Product {
 }
 
 const PRODUCTS: Product[] = [
-  { id: 'burger', name: 'Big Burger', price: 5, image: '🍔' },
-  { id: 'coffee', name: 'Premium Coffee', price: 7, image: '☕' },
-  { id: 'concert', name: 'Concert Ticket', price: 150, image: '🎟️' },
-  { id: 'phone', name: 'Smartphone Pro', price: 1200, image: '📱' },
-  { id: 'designer', name: 'Designer Suit', price: 3500, image: '👔' },
-  { id: 'car', name: 'Electric Car', price: 85000, image: '🚗' },
-  { id: 'house', name: 'Silicon Valley Mansion', price: 12000000, image: '🏡' },
-  { id: 'jet', name: 'Private Jet', price: 65000000, image: '🛩️' },
-  { id: 'island', name: 'Tropical Island', price: 250000000, image: '🏝️' },
-  { id: 'nba', name: 'NBA Team', price: 3500000000, image: '🏀' },
-  { id: 'nfl', name: 'NFL Team', price: 6000000000, image: '🏈' },
+  { id: 'candy', name: 'Bala', price: 0.5, image: '🍬' },
+  { id: 'water', name: 'Garrafinha de Água', price: 2, image: '🥤' },
+  { id: 'soda', name: 'Refrigerante', price: 4, image: '🥫' },
+  { id: 'burger', name: 'Hambúrguer Gourmet', price: 35, image: '🍔' },
+  { id: 'coffee', name: 'Café Premium', price: 15, image: '☕' },
+  { id: 'book', name: 'Livro Bestseller', price: 50, image: '📕' },
+  { id: 'game', name: 'Jogo de Videogame', price: 350, image: '🎮' },
+  { id: 'concert', name: 'Ingresso de Show (VIP)', price: 1500, image: '🎟️' },
+  { id: 'shoes', name: 'Tênis de Grife', price: 5000, image: '👟' },
+  { id: 'phone', name: 'Smartphone Pro Max', price: 10000, image: '📱' },
+  { id: 'pc', name: 'PC Gamer High-End', price: 25000, image: '🖥️' },
+  { id: 'designer', name: 'Terno de Grife', price: 45000, image: '👔' },
+  { id: 'watch', name: 'Relógio Suíço Luxo', price: 150000, image: '⌚' },
+  { id: 'car', name: 'Carro Popular', price: 80000, image: '🚘' },
+  { id: 'sportscar', name: 'Carro Esportivo', price: 850000, image: '🏎️' },
+  { id: 'apartamento', name: 'Cobertura em SP', price: 15000000, image: '🏙️' },
+  { id: 'house', name: 'Mansão em LA', price: 45000000, image: '🏡' },
+  { id: 'yacht', name: 'Iate de Luxo', price: 100000000, image: '🛥️' },
+  { id: 'jet', name: 'Jatinho Particular Gulfstream', price: 250000000, image: '🛩️' },
+  { id: 'tank', name: 'Tanque de Guerra', price: 50000000, image: '🚜' },
+  { id: 'island', name: 'Ilha Tropical', price: 750000000, image: '🏝️' },
+  { id: 'skyscraper', name: 'Arranha-Céu Comercial', price: 850000000, image: '🏢' },
+  { id: 'stadium', name: 'Estádio de Futebol', price: 1500000000, image: '🏟️' },
+  { id: 'monalisa', name: 'A Mona Lisa', price: 3000000000, image: '🖼️' },
+  { id: 'nba', name: 'Time da NBA', price: 3500000000, image: '🏀' },
+  { id: 'nfl', name: 'Time da NFL', price: 6000000000, image: '🏈' },
+  { id: 'f1', name: 'Equipe de Fórmula 1', price: 1500000000, image: '🏎️' },
+  { id: 'superyacht', name: 'Super Iate com Submarino', price: 5000000000, image: '🛳️' },
+  { id: 'cruise', name: 'Navio de Cruzeiro', price: 6500000000, image: '⛴️' },
+  { id: 'fighterjet', name: 'Caça de 5ª Geração', price: 900000000, image: '🛩️' },
+  { id: 'rocket', name: 'Foguete Orbital', price: 8000000000, image: '🚀' },
+  { id: 'spaceshuttle', name: 'Ônibus Espacial', price: 12000000000, image: '🛸' },
+  { id: 'moonbase', name: 'Base Lunar (Modular)', price: 75000000000, image: '🌕' },
+  { id: 'twitter', name: 'Comprar o Twitter/X', price: 44000000000, image: '🐦' },
+  { id: 'country', name: 'Um País Pequeno', price: 100000000000, image: '🗺️' },
+  { id: 'worldpeace', name: 'Paz Mundial', price: 150000000000, image: '🕊️' },
 ];
 
 const INITIAL_MONEY = 200000000000; // 200 Billion
@@ -31,9 +56,9 @@ export function SpendMoney() {
   const [cart, setCart] = useState<{ [id: string]: number }>({});
 
   const formatMoney = (amount: number) => {
-    return new Intl.NumberFormat('en-US', {
+    return new Intl.NumberFormat('pt-BR', {
       style: 'currency',
-      currency: 'USD',
+      currency: 'BRL',
       maximumFractionDigits: 0,
     }).format(amount);
   };
@@ -80,7 +105,7 @@ export function SpendMoney() {
                 <div className="w-20 h-20 bg-emerald-500 rounded-3xl flex items-center justify-center text-white shadow-2xl shadow-emerald-500/30">
                     <DollarSign size={40} className="stroke-[3]" />
                 </div>
-                <h2 className="font-display text-4xl md:text-6xl font-black italic uppercase tracking-tighter text-slate-900">Spend Bill Gates' Money</h2>
+                <h2 className="font-display text-4xl md:text-6xl font-black italic uppercase tracking-tighter text-slate-900">Gaste o Dinheiro do Bilionário</h2>
                 <div className="h-px w-24 bg-slate-200" />
             </div>
 

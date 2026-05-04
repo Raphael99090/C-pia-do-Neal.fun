@@ -3,6 +3,23 @@ import { motion, AnimatePresence } from "motion/react";
 import { AlertTriangle, Heart, Scale, Users, ShieldAlert, Zap, Loader2, Sparkles } from "lucide-react";
 import { audioSystem } from "../lib/audio";
 import { GoogleGenAI, Type } from "@google/genai";
+import { db, auth, OperationType, handleFirestoreError } from "../lib/firebase";
+import { signInAnonymously, onAuthStateChanged } from "firebase/auth";
+import { 
+  addDoc,
+  setDoc, 
+  getDoc, 
+  doc, 
+  collection, 
+  getDocs, 
+  query, 
+  where,
+  limit,
+  orderBy,
+  onSnapshot,
+  serverTimestamp 
+} from "firebase/firestore";
+import { PREDEFINED_DILEMMAS } from "../lib/dilemmaData";
 
 interface Dilemma {
   id: number;
@@ -20,26 +37,10 @@ interface Dilemma {
   };
 }
 
-const INITIAL_DILEMMAS: Dilemma[] = [
-  {
-    id: 1,
-    title: "O Remédio Roubado",
-    description: "Sua mãe está gravemente doente e o único remédio que pode salvá-la custa uma fortuna que você não tem. O farmacêutico se recusa a baixar o preço ou facilitar o pagamento.",
-    optionA: {
-      text: "Roubar o remédio",
-      consequence: "Sua mãe sobrevive, mas você corre o risco de ser preso e arruinar sua reputação.",
-      impact: "Individualismo Extremo"
-    },
-    optionB: {
-      text: "Não roubar",
-      consequence: "Sua mãe pode falecer, mas você mantém sua integridade moral perante a lei.",
-      impact: "Ética Deontológica"
-    }
-  }
-];
-
 export function MoralDilemmas() {
-  const [dilemmas, setDilemmas] = useState<Dilemma[]>(INITIAL_DILEMMAS);
+  const [dilemmas, setDilemmas] = useState<Dilemma[]>(() => {
+    return [...PREDEFINED_DILEMMAS].sort(() => Math.random() - 0.5);
+  });
   const [currentIndex, setCurrentIndex] = useState(0);
   const [history, setHistory] = useState<{ dilemmaId: number, choice: 'A' | 'B' }[]>([]);
   const [isGenerating, setIsGenerating] = useState(false);
@@ -48,13 +49,42 @@ export function MoralDilemmas() {
 
   const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 
+  useEffect(() => {
+    onAuthStateChanged(auth, (user) => {
+      if (!user) {
+        signInAnonymously(auth).catch(console.error);
+      }
+    });
+
+    // Listen for new dilemmas globally
+    const q = query(collection(db, "moral_dilemmas"), orderBy("createdAt", "desc"), limit(20));
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const fetched: Dilemma[] = [];
+      snapshot.forEach(doc => {
+        const data = doc.data();
+        fetched.push({ ...data, id: doc.id } as any);
+      });
+      if (fetched.length > 0) {
+        setDilemmas(prev => {
+          const existingIds = new Set(prev.map(d => String(d.id)));
+          const uniqueNew = fetched.filter(f => !existingIds.has(String(f.id)));
+          if (uniqueNew.length === 0) return prev;
+          // Randomly insert the fetched items at the end to keep the initial predefined mix
+          return [...prev, ...uniqueNew];
+        });
+      }
+    });
+
+    return () => unsubscribe();
+  }, []);
+
   // Pre-fetch a dilemma into the queue
   const prefetchDilemma = async (titles: string[]) => {
     if (isGenerating || queue.length >= 2) return;
     setIsGenerating(true);
     try {
       const response = await ai.models.generateContent({
-        model: "gemini-3-flash-preview",
+        model: "gemini-2.5-flash-8b",
         contents: `Gere um novo dilema moral único e difícil em português. 
         Evite estes temas: ${titles.slice(-10).join(", ")}.
         O dilema deve ter uma decisão impossível entre duas escolhas difíceis.`,
@@ -90,19 +120,37 @@ export function MoralDilemmas() {
       });
 
       const data = JSON.parse(response.text.trim());
-      setQueue(prev => [...prev, { ...data, id: Date.now() }]);
-    } catch (err) {
+      const newDilemma = { ...data, id: Date.now() + Math.random() };
+      setQueue(prev => [...prev, newDilemma]);
+
+      // Share to Firebase
+      if (auth.currentUser) {
+        try {
+          await addDoc(collection(db, "moral_dilemmas"), {
+            ...data,
+            createdAt: serverTimestamp(),
+            createdBy: auth.currentUser.uid
+          });
+        } catch (fErr) {
+          console.error("Failed to share dilemma", fErr);
+        }
+      }
+    } catch (err: any) {
       console.error("AI Generation failed", err);
+      if (err.message?.includes("429") || err.message?.includes("quota")) {
+         // Show a subtle toast or message if needed
+      }
     } finally {
       setIsGenerating(false);
     }
   };
 
   useEffect(() => {
-    if (queue.length < 2) {
+    // Only prefetch if we're near the end of our dilemmas array AND queue is empty
+    if (dilemmas.length - currentIndex <= 3 && queue.length < 2) {
       prefetchDilemma(dilemmas.map(d => d.title));
     }
-  }, [queue, dilemmas]);
+  }, [currentIndex, dilemmas.length, queue.length]);
 
   const handleChoice = (choice: 'A' | 'B') => {
     audioSystem.playClick();
@@ -112,18 +160,20 @@ export function MoralDilemmas() {
     const impact = (choice === 'A' ? current.optionA.impact : current.optionB.impact).toLowerCase();
     setScore(prev => ({
       ...prev,
-      empathy: prev.empathy + (impact.includes("empatia") || impact.includes("individual") ? 1 : 0),
-      justice: prev.justice + (impact.includes("justiça") || impact.includes("ética") ? 1 : 0),
-      utility: prev.utility + (impact.includes("utilitaris") ? 1 : 0)
+      empathy: prev.empathy + (impact.includes("empatia") || impact.includes("compaixão") || impact.includes("social") ? 1 : 0),
+      justice: prev.justice + (impact.includes("justiça") || impact.includes("ética") || impact.includes("dever") || impact.includes("integridade") ? 1 : 0),
+      utility: prev.utility + (impact.includes("utilitaris") || impact.includes("pragmati") || impact.includes("sobrevivência") ? 1 : 0)
     }));
 
-    if (queue.length > 0) {
+    if (currentIndex + 1 < dilemmas.length) {
+      setCurrentIndex(prev => prev + 1);
+    } else if (queue.length > 0) {
       const nextDilemma = queue[0];
       setDilemmas(prev => [...prev, nextDilemma]);
       setQueue(prev => prev.slice(1));
       setCurrentIndex(prev => prev + 1);
     } else {
-        // Fallback if queue is empty (should be rare with prefetch)
+        // Fallback if queue is empty
         setIsGenerating(true);
     }
   };

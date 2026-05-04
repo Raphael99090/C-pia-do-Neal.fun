@@ -82,7 +82,7 @@ export function GameOfLife() {
   };
 
   return (
-    <div className="w-full h-full flex flex-col items-center justify-center p-4">
+    <div className="w-full h-full flex flex-col items-center justify-center bg-slate-950 p-4">
       <div className="flex flex-wrap items-center justify-center gap-4 mb-8">
         <button
           onClick={() => {

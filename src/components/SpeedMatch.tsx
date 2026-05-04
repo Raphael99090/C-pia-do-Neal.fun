@@ -21,6 +21,7 @@ export function SpeedMatch() {
   const [score, setScore] = useState(0);
   const [timeLeft, setTimeLeft] = useState(30);
   const [feedback, setFeedback] = useState<'correct' | 'wrong' | null>(null);
+  const [turn, setTurn] = useState(0);
 
   const generateItem = useCallback((): Item => {
     return {
@@ -70,6 +71,7 @@ export function SpeedMatch() {
     
     setPreviousItem(currentItem);
     setCurrentItem(generateItem());
+    setTurn(t => t + 1);
   };
 
   const ShapeIcon = ({ item }: { item: Item }) => {
@@ -94,7 +96,7 @@ export function SpeedMatch() {
   };
 
   return (
-    <div className="w-full h-full flex flex-col items-center justify-center p-4">
+    <div className="w-full h-full flex flex-col items-center justify-center bg-slate-950 p-4">
       <AnimatePresence mode="wait">
         {gameState === 'idle' && (
           <motion.div 
@@ -130,7 +132,7 @@ export function SpeedMatch() {
             <div className="relative w-64 h-64 flex items-center justify-center bg-slate-900 rounded-[40px] border border-slate-800 shadow-2xl mb-12">
                <AnimatePresence mode="wait">
                  <motion.div 
-                    key={`${currentItem?.shape}-${currentItem?.color}`}
+                    key={turn}
                     initial={{ scale: 0.5, opacity: 0, rotate: -10 }}
                     animate={{ scale: 1, opacity: 1, rotate: 0 }}
                     exit={{ scale: 1.5, opacity: 0, rotate: 10 }}

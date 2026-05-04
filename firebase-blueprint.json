@@ -1,0 +1,62 @@
+{
+  "entities": {
+    "AlchemyRecipe": {
+      "title": "Alchemy Recipe",
+      "description": "A combination of two elements and its resulting third element.",
+      "type": "object",
+      "properties": {
+        "elements": {
+          "type": "array",
+          "description": "Sorted IDs of the two elements combined.",
+          "items": { "type": "string" }
+        },
+        "resultId": {
+          "type": "string",
+          "description": "The ID of the resulting element."
+        }
+      },
+      "required": ["elements", "resultId"]
+    },
+    "AlchemyElement": {
+      "title": "Alchemy Element",
+      "description": "A discovered element in the alchemy game.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "icon": { "type": "string" },
+        "color": { "type": "string" },
+        "discoveredBy": { "type": "string" },
+        "discoveredAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "name", "icon", "color"]
+    },
+    "MoralDilemma": {
+      "title": "Moral Dilemma",
+      "description": "An AI generated moral dilemma shared globally.",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string" },
+        "scenario": { "type": "string" },
+        "optionA": { "type": "string" },
+        "optionB": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["title", "scenario", "optionA", "optionB"]
+    }
+  },
+  "firestore": {
+    "/alchemy_recipes/{recipeId}": {
+      "schema": "AlchemyRecipe",
+      "description": "Global database of alchemy combinations."
+    },
+    "/alchemy_elements/{elementId}": {
+      "schema": "AlchemyElement",
+      "description": "Global database of discovered elements."
+    },
+    "/moral_dilemmas/{dilemmaId}": {
+      "schema": "MoralDilemma",
+      "description": "Shared pool of moral dilemmas."
+    }
+  }
+}

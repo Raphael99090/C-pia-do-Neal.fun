@@ -143,7 +143,7 @@ export function PerfectCircle() {
   };
 
   return (
-    <div className="w-full h-full flex flex-col items-center justify-center p-4 lg:p-8">
+    <div className="w-full h-full flex flex-col items-center justify-center bg-slate-950 p-4 lg:p-8">
       <div className="w-full max-w-4xl flex flex-col gap-8">
         
         <div className="flex justify-between items-end">

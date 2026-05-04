@@ -10,6 +10,10 @@ const COLORS = [
   { label: "AZUL", value: "blue", hex: "#3b82f6", textClass: "text-blue-500" },
   { label: "VERDE", value: "green", hex: "#10b981", textClass: "text-emerald-500" },
   { label: "AMARELO", value: "yellow", hex: "#eab308", textClass: "text-amber-500" },
+  { label: "ROXO", value: "purple", hex: "#a855f7", textClass: "text-purple-500" },
+  { label: "LARANJA", value: "orange", hex: "#f97316", textClass: "text-orange-500" },
+  { label: "ROSA", value: "pink", hex: "#ec4899", textClass: "text-pink-500" },
+  { label: "CIANO", value: "cyan", hex: "#06b6d4", textClass: "text-cyan-500" },
 ];
 
 export function ColorGenius() {
@@ -102,7 +106,7 @@ export function ColorGenius() {
   };
 
   return (
-    <div className="w-full h-full flex flex-col items-center justify-center p-4 select-none lg:flex-row lg:items-start lg:pt-24 lg:justify-center lg:gap-12 overflow-hidden">
+    <div className="w-full h-full flex flex-col items-center justify-center bg-slate-950 p-4 select-none lg:flex-row lg:items-start lg:pt-24 lg:justify-center lg:gap-12 overflow-hidden">
       
       {/* Side Score HUD for Desktop */}
       <div className="hidden lg:flex w-64 flex-col gap-6">

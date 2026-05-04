@@ -102,7 +102,7 @@ export function SequenceMaster() {
   };
 
   return (
-    <div className="w-full h-full flex flex-col items-center justify-center p-4 select-none lg:flex-row lg:items-start lg:pt-24 lg:justify-center lg:gap-12 overflow-hidden">
+    <div className="w-full h-full flex flex-col items-center justify-center bg-slate-950 p-4 select-none lg:flex-row lg:items-start lg:pt-24 lg:justify-center lg:gap-12 overflow-hidden">
       
       {/* Side Score HUD for Desktop */}
       <div className="hidden lg:flex w-64 flex-col gap-6">

@@ -10,6 +10,21 @@ import {
 } from "lucide-react";
 import { GoogleGenAI, Type } from "@google/genai";
 import { audioSystem } from "../lib/audio";
+import { PREDEFINED_ELEMENTS, PREDEFINED_RECIPES } from "../lib/alchemyData";
+import { db, auth, OperationType, handleFirestoreError } from "../lib/firebase";
+import { signInAnonymously, onAuthStateChanged } from "firebase/auth";
+import { 
+  setDoc, 
+  getDoc, 
+  doc, 
+  collection, 
+  getDocs, 
+  query, 
+  where,
+  limit,
+  orderBy,
+  onSnapshot 
+} from "firebase/firestore";
 
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 
@@ -20,33 +35,6 @@ type ElementDef = {
   color: string;
 };
 
-const INITIAL_ELEMENTS: Record<string, ElementDef> = {
-  water: {
-    id: "water",
-    name: "Water",
-    icon: "💧",
-    color: "bg-blue-600 text-white",
-  },
-  fire: {
-    id: "fire",
-    name: "Fire",
-    icon: "🔥",
-    color: "bg-red-600 text-white",
-  },
-  earth: {
-    id: "earth",
-    name: "Earth",
-    icon: "🌍",
-    color: "bg-amber-700 text-white",
-  },
-  air: {
-    id: "air",
-    name: "Air",
-    icon: "🌬️",
-    color: "bg-sky-400 text-slate-900",
-  },
-};
-
 const INITIAL_UNLOCKED = ["water", "fire", "earth", "air"];
 
 export function AlchemyGame() {
@@ -54,7 +42,7 @@ export function AlchemyGame() {
     () => {
       const saved = localStorage.getItem("alchemyElements");
       if (saved) return JSON.parse(saved);
-      return INITIAL_ELEMENTS;
+      return PREDEFINED_ELEMENTS;
     },
   );
 
@@ -76,6 +64,27 @@ export function AlchemyGame() {
   const [isCombining, setIsCombining] = useState(false);
 
   useEffect(() => {
+    onAuthStateChanged(auth, (user) => {
+      if (!user) {
+        signInAnonymously(auth).catch(console.error);
+      }
+    });
+
+    // Listen for new elements globally
+    const qElements = query(collection(db, "alchemy_elements"), orderBy("name"), limit(100));
+    const unsubscribeElements = onSnapshot(qElements, (snapshot) => {
+      const newElements: Record<string, ElementDef> = { ...PREDEFINED_ELEMENTS };
+      snapshot.forEach(doc => {
+        const data = doc.data() as ElementDef;
+        newElements[data.id] = data;
+      });
+      setAllElements(prev => ({ ...prev, ...newElements }));
+    }, (err) => handleFirestoreError(err, OperationType.LIST, "alchemy_elements"));
+
+    return () => unsubscribeElements();
+  }, []);
+
+  useEffect(() => {
     localStorage.setItem("alchemyElements", JSON.stringify(allElements));
     localStorage.setItem("alchemyUnlocked", JSON.stringify(unlocked));
     localStorage.setItem("alchemyRecipes", JSON.stringify(recipes));
@@ -85,17 +94,17 @@ export function AlchemyGame() {
     const el1 = allElements[el1Id].name;
     const el2 = allElements[el2Id].name;
 
-    const prompt = `Combine the following two elements to create a new element, similar to the game Infinite Craft. 
-Elements to combine: "${el1}" and "${el2}"
-Feel free to be creative, funny, or logical.
-Return ONLY a valid JSON object with the fields:
-- name: (a short string, title cased)
-- icon: (a single emoji representing it)
-- color: (a Tailwind CSS background color and text color class, e.g. "bg-emerald-500 text-white". Ensure text is readable against the background.)`;
+    const prompt = `Você é um mestre alquimista. Combine estes dois elementos para criar um novo elemento, como no jogo Infinite Craft.
+Elementos para combinar: "${el1}" e "${el2}"
+Seja criativo, engraçado ou lógico. O resultado deve ser em PORTUGUÊS.
+Retorne APENAS um objeto JSON válido com os campos:
+- name: (uma string curta, título capitalizado)
+- icon: (um único emoji representando-o)
+- color: (uma classe Tailwind CSS de cor de fundo e cor de texto, ex: "bg-emerald-500 text-white". Garanta que o texto seja legível contra o fundo.)`;
 
     try {
       const response = await ai.models.generateContent({
-        model: "gemini-3-flash-preview",
+        model: "gemini-2.5-flash-8b",
         contents: prompt,
         config: {
           responseMimeType: "application/json",
@@ -113,9 +122,16 @@ Return ONLY a valid JSON object with the fields:
 
       const text = response.text?.trim();
       if (!text) return null;
-      return JSON.parse(text) as { name: string; icon: string; color: string };
-    } catch (err) {
-      console.error(err);
+      
+      // Clean potential markdown artifacts just in case
+      const jsonStr = text.startsWith("```") ? text.replace(/^```json\n?/, "").replace(/\n?```$/, "") : text;
+      
+      return JSON.parse(jsonStr) as { name: string; icon: string; color: string };
+    } catch (err: any) {
+      console.error("Erro na Alquimia:", err);
+      if (err.message?.includes("429") || err.message?.includes("quota")) {
+        throw new Error("QUOTA_EXCEEDED");
+      }
       return null;
     }
   };
@@ -133,7 +149,7 @@ Return ONLY a valid JSON object with the fields:
       setSelected(newSelected);
       setIsCombining(true);
 
-      const recipeKey = [...newSelected].sort().join("+");
+      const recipeKey = [...newSelected].sort().join(",");
       const existingResultId = recipes[recipeKey];
 
       if (existingResultId) {
@@ -146,39 +162,108 @@ Return ONLY a valid JSON object with the fields:
         setLastDiscovered(existingResultId);
         setSelected([]);
         setIsCombining(false);
-      } else {
-        // Ask Gemini
-        const result = await generateCombination(
-          newSelected[0],
-          newSelected[1],
-        );
-        if (result) {
+      } else if (PREDEFINED_RECIPES[recipeKey]) {
+        // Predefined combination
+        const predefinedId = PREDEFINED_RECIPES[recipeKey];
+        if (!unlocked.includes(predefinedId)) {
+          setUnlocked((prev) => [...prev, predefinedId]);
           audioSystem.playSuccess();
-          const resultId = result.name.toLowerCase();
+        } else {
+          audioSystem.playSelect();
+        }
+        setLastDiscovered(predefinedId);
+        setSelected([]);
+        setIsCombining(false);
+        // Save to discovered recipes
+        setRecipes((prev) => ({ ...prev, [recipeKey]: predefinedId }));
+      } else {
+        // Check Firebase for global recipe
+        try {
+          const recipeDoc = await getDoc(doc(db, "alchemy_recipes", recipeKey));
+          if (recipeDoc.exists()) {
+            const data = recipeDoc.data();
+            const resultId = data.resultId;
+            
+            // Check if we have the element definition
+            const elementDoc = await getDoc(doc(db, "alchemy_elements", resultId));
+            if (elementDoc.exists()) {
+              const elData = elementDoc.data() as ElementDef;
+              setAllElements(prev => ({ ...prev, [resultId]: elData }));
+              setRecipes(prev => ({ ...prev, [recipeKey]: resultId }));
+              
+              if (!unlocked.includes(resultId)) {
+                setUnlocked((prev) => [...prev, resultId]);
+                audioSystem.playSuccess();
+              } else {
+                audioSystem.playSelect();
+              }
+              setLastDiscovered(resultId);
+              setSelected([]);
+              setIsCombining(false);
+              return;
+            }
+          }
+        } catch (err) {
+          console.error("Firebase recipe check failed", err);
+        }
 
-          setAllElements((prev) => ({
-            ...prev,
-            [resultId]: {
+        // Ask Gemini
+        try {
+          const result = await generateCombination(
+            newSelected[0],
+            newSelected[1],
+          );
+          if (result) {
+            audioSystem.playSuccess();
+            const resultId = result.name.toLowerCase().replace(/\s+/g, "_");
+
+            const newElement: ElementDef = {
               id: resultId,
               name: result.name,
               icon: result.icon,
               color: result.color,
-            },
-          }));
+            };
 
-          setRecipes((prev) => ({
-            ...prev,
-            [recipeKey]: resultId,
-          }));
+            setAllElements((prev) => ({
+              ...prev,
+              [resultId]: newElement,
+            }));
 
-          if (!unlocked.includes(resultId)) {
-            setUnlocked((prev) => [...prev, resultId]);
+            setRecipes((prev) => ({
+              ...prev,
+              [recipeKey]: resultId,
+            }));
+
+            if (!unlocked.includes(resultId)) {
+              setUnlocked((prev) => [...prev, resultId]);
+            }
+
+            setLastDiscovered(resultId);
+
+            // Save to Firebase for everyone
+            if (auth.currentUser) {
+              try {
+                await setDoc(doc(db, "alchemy_elements", resultId), newElement);
+                await setDoc(doc(db, "alchemy_recipes", recipeKey), {
+                  elements: [...newSelected].sort(),
+                  resultId: resultId,
+                  discoveredBy: auth.currentUser.uid
+                });
+              } catch (fErr) {
+                console.error("Failed to share element/recipe", fErr);
+              }
+            }
+          } else {
+            audioSystem.playError();
+            setErrorMsg("O universo não encontrou uma resposta lógica para isso.");
           }
-
-          setLastDiscovered(resultId);
-        } else {
+        } catch (err: any) {
           audioSystem.playError();
-          setErrorMsg("The universe rejected that combination.");
+          if (err.message === "QUOTA_EXCEEDED") {
+            setErrorMsg("Limite do Google atingido! Aguarde um minuto para a energia alquímica recarregar.");
+          } else {
+            setErrorMsg("Ocorreu um erro na fusão dos elementos.");
+          }
         }
         setSelected([]);
         setIsCombining(false);
@@ -196,7 +281,7 @@ Return ONLY a valid JSON object with the fields:
     setLastDiscovered(null);
   };
 
-  const totalPossible = "Infinite";
+  const totalPossible = "Infinito";
 
   return (
     <div className="w-full h-full flex flex-col md:flex-row bg-slate-950 text-white">
@@ -204,7 +289,7 @@ Return ONLY a valid JSON object with the fields:
       <div className="flex-1 p-8 flex flex-col items-center justify-center relative border-r border-slate-800">
         <div className="absolute top-8 left-8 text-slate-400">
           <p className="font-medium text-lg">
-            Discovered:{" "}
+            Descobertos:{" "}
             <span className="text-emerald-400">
               {unlocked.length} / {totalPossible}
             </span>
@@ -221,11 +306,11 @@ Return ONLY a valid JSON object with the fields:
                   exit={{ opacity: 0 }}
                   className="text-slate-500 absolute text-center"
                 >
-                  Select two elements
+                  Selecione dois elementos
                   <br />
-                  from the panel
+                  do painel
                   <br />
-                  to combine them.
+                  para combiná-los.
                 </motion.p>
               )}
             </AnimatePresence>
@@ -254,7 +339,7 @@ Return ONLY a valid JSON object with the fields:
                     exit={{ scale: 0 }}
                     className="flex items-center gap-2 px-4 py-2 rounded-full font-bold shadow-lg bg-indigo-600 text-white"
                   >
-                    <Loader2 className="animate-spin" size={18} /> Musing...
+                    <Loader2 className="animate-spin" size={18} /> Pensando...
                   </motion.div>
                 )}
               </AnimatePresence>
@@ -269,7 +354,7 @@ Return ONLY a valid JSON object with the fields:
                     className="flex flex-col items-center"
                   >
                     <div className="text-emerald-400 font-bold mb-2 flex items-center gap-2">
-                      <CheckCircle2 size={18} /> Success!
+                      <CheckCircle2 size={18} /> Sucesso!
                     </div>
                     <div
                       className={`flex items-center gap-3 px-6 py-3 text-lg rounded-full font-bold shadow-xl ${allElements[lastDiscovered].color}`}
@@ -297,14 +382,14 @@ Return ONLY a valid JSON object with the fields:
             disabled={selected.length === 0}
             className="mt-8 px-6 py-2 rounded-full font-semibold text-slate-400 hover:text-white hover:bg-slate-800 disabled:opacity-30 transition-colors"
           >
-            Clear Selection
+            Limpar Seleção
           </button>
         </div>
       </div>
 
       {/* Elements Panel */}
       <div className="w-full md:w-96 bg-slate-900 border-l border-slate-800 p-6 flex flex-col items-start overflow-y-auto max-h-[50vh] md:max-h-none">
-        <h3 className="text-xl font-bold mb-6 text-slate-300">Your Elements</h3>
+        <h3 className="text-xl font-bold mb-6 text-slate-300">Seus Elementos</h3>
         <div className="flex flex-wrap gap-3">
           {unlocked.map((id) => {
             const el = allElements[id];
