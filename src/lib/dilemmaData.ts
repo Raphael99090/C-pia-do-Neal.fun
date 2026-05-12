@@ -464,5 +464,80 @@ export const PREDEFINED_DILEMMAS: Dilemma[] = [
         consequence: "Corruptos, mentirosos cruéis e farsantes ganham espaço e tempo pela eternidade social intacta.",
         impact: "Sustentação Teatral"
      }
-  }
+  },
+  {
+     id: 31,
+     title: "O Único Sobrevivente",
+     description: "Você e outra pessoa estão num bote salva-vidas no meio do oceano. Há comida e água para apenas uma pessoa sobreviver até o resgate chegar em uma semana. A outra pessoa é um brilhante cientista que talvez descubra uma grande cura.",
+     optionA: {
+        text: "Sacrificar-se",
+        consequence: "Você morre de inanição ou se lança ao mar, garantindo que a humanidade ganhe as descobertas do cientista.",
+        impact: "Altruísmo Supremo"
+     },
+     optionB: {
+        text: "Lutar pelos recursos",
+        consequence: "Você sobrevive, garantindo seu direito à vida, mas tira do mundo uma mente que salvaria milhões.",
+        impact: "Sobrevivência Pragmática"
+     }
+  },
+  {
+     id: 32,
+     title: "Arte versus História",
+     description: "Um museu está em chamas. Você só consegue salvar um objeto. De um lado, a pintura original da Mona Lisa. Do outro, um arquivo científico contendo a cura revolucionária desenvolvida ao longo de 20 anos, mas que ainda não foi publicada.",
+     optionA: {
+        text: "Salvar a cura",
+        consequence: "Milhares viverão, mas uma das obras de arte mais importantes da história humana virou cinzas para sempre.",
+        impact: "Utilitarismo Científico"
+     },
+     optionB: {
+        text: "Salvar a Mona Lisa",
+        consequence: "O patrimônio cultural da humanidade está preservado, mas pessoas continuarão morrendo até que a cura seja redescoberta em décadas.",
+        impact: "Preservação Histórica"
+     }
+  },
+  {
+      id: 33,
+      title: "O Botão da Roleta Russa Global",
+      description: "Lhe oferecem um botão. Se pressionado, há 50% de chance de acabar com qualquer sofrimento, fome e pobreza da Terra e levar a uma utopia eterna. Mas há 50% de chance de todos os seres vivos morrerem instantaneamente.",
+      optionA: {
+         text: "Pressionar o botão",
+         consequence: "Você assume o risco final, apostando a existência pelo fim absoluto da miséria.",
+         impact: "Aposta Utilitarista Extrema"
+      },
+      optionB: {
+         text: "Recusar a oferta",
+         consequence: "A humanidade continuará viva, mas sofrimento, doenças e desigualdades continuarão destruindo vidas lentamente.",
+         impact: "Aversão à Aniquilação"
+      }
+   },
+   {
+      id: 34,
+      title: "O Preço do Esquecimento",
+      description: "Uma pessoa que você ama mais do que tudo foi vítima de um trauma inimaginável e quer tirar a própria vida todos os dias porque a dor da lembrança é insuportável. Uma tecnologia pode apagar a memória, mas o processo danificará 50% do cérebro, diminuindo drasticamente sua inteligência e personalidade.",
+      optionA: {
+         text: "Apagar a memória",
+         consequence: "A pessoa sobrevive num estado de felicidade alienada e letárgica, perdendo a essência de quem era.",
+         impact: "Paz Cognitiva Violenta"
+      },
+      optionB: {
+         text: "Manter as memórias",
+         consequence: "A pessoa preserva sua brilhante mente e quem é de verdade, mas corre risco diário e extremo de não suportar viver.",
+         impact: "Honra à Subjetividade"
+      }
+   },
+   {
+       id: 35,
+       title: "Justiça Cega",
+       description: "Um assassino em série confessa dezenas de crimes de forma brutal a você, porém ele confessa durante o confessionário ou como seu cliente (sob sigilo absoluto). Se você quebrar o sigilo, você perde para sempre sua licença profissional e irá preso por obstrução (se for confessado ilegalmente), além de ir contra o próprio juramento que fez.",
+       optionA: {
+          text: "Quebrar o sigilo",
+          consequence: "Ele é preso para sempre e novas vidas são salvas, mas você destrói a própria vida profissional e pessoal num escândalo.",
+          impact: "Sacrifício Moral Direto"
+       },
+       optionB: {
+          text: "Manter em segredo",
+          consequence: "Você resguarda a ética suprema da sua profissão, mas pessoas inocentes continuarão morrendo nas mãos dele.",
+          impact: "Deontologia Institucional"
+       }
+   }
 ];

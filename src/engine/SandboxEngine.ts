@@ -70,6 +70,7 @@ export class SandboxEngine {
       else if (type === ElementType.FUNGUS) this.spreadFungus(x, y);
       else if (type === ElementType.SPONGE) this.processSponge(x, y);
       else if (type === ElementType.C4) this.processC4(x, y);
+      else if (type === ElementType.BLACK_HOLE) this.processBlackHole(x, y);
       return;
     }
 
@@ -82,6 +83,15 @@ export class SandboxEngine {
       }
       if (type === ElementType.VIRUS) {
         this.processVirus(x, y);
+      }
+      if (type === ElementType.VINE) {
+        if (Math.random() < 0.02 && this.isInBounds(x, y + 1) && this.grid[this.getIndex(x, y + 1)] === ElementType.EMPTY) {
+           this.nextGrid[this.getIndex(x, y + 1)] = ElementType.VINE;
+           this.updated[this.getIndex(x, y + 1)] = true;
+        }
+      }
+      if (type === ElementType.BACTERIA) {
+         this.processBacteria(x, y);
       }
       if (type === ElementType.THERMITE) {
         this.processThermite(x, y);
@@ -329,6 +339,12 @@ export class SandboxEngine {
     const nIdx = this.getIndex(nx, ny);
     const targetType = this.grid[nIdx];
     
+    // Safety check: ensure target in nextGrid is still what it was in grid
+    // and hasn't been moved into by another particle already
+    if (this.nextGrid[nIdx] !== targetType || this.updated[nIdx]) {
+      return false;
+    }
+    
     if (targetType === ElementType.EMPTY) {
       const idx = this.getIndex(x, y);
       this.nextGrid[idx] = targetType;
@@ -361,6 +377,11 @@ export class SandboxEngine {
     const nIdx = this.getIndex(nx, ny);
     const targetType = this.grid[nIdx];
 
+    // Safety check
+    if (this.nextGrid[nIdx] !== targetType || this.updated[nIdx]) {
+      return false;
+    }
+
     if (targets.includes(targetType)) {
       const idx = this.getIndex(x, y);
       const currentType = this.grid[idx];
@@ -386,17 +407,33 @@ export class SandboxEngine {
     }
 
     if (props.flammable && Math.random() < (props.burnRate || 0.1)) {
-      this.nextGrid[idx] = ElementType.FIRE;
+      // Wood and Plant might leave Ash/Coal behind instead of just disappearing
+      if ((target === ElementType.WOOD || target === ElementType.PLANT) && Math.random() > 0.8) {
+         this.nextGrid[idx] = Math.random() > 0.5 ? ElementType.ASH : ElementType.COAL;
+      } else {
+         this.nextGrid[idx] = ElementType.FIRE;
+      }
       this.updated[idx] = true;
+      return;
     }
 
-    if (target === ElementType.WATER && Math.random() > 0.7) {
+    if (target === ElementType.WATER && Math.random() > 0.6) {
       this.nextGrid[idx] = ElementType.STEAM;
       this.updated[idx] = true;
     }
 
-    if (target === ElementType.ICE && Math.random() > 0.4) {
+    if (target === ElementType.ICE && Math.random() > 0.3) {
       this.nextGrid[idx] = ElementType.WATER;
+      this.updated[idx] = true;
+    }
+
+    if (target === ElementType.CLAY && Math.random() > 0.95) {
+      this.nextGrid[idx] = ElementType.STONE;
+      this.updated[idx] = true;
+    }
+    
+    if (target === ElementType.DIRT && Math.random() > 0.95) {
+      this.nextGrid[idx] = ElementType.SAND; // Fire dries dirt out into sand
       this.updated[idx] = true;
     }
 
@@ -645,13 +682,18 @@ export class SandboxEngine {
       target !== ElementType.STONE &&
       target !== ElementType.ACID &&
       target !== ElementType.GLASS &&
-      target !== ElementType.WATER
+      target !== ElementType.WATER &&
+      target !== ElementType.OBSIDIAN
     ) {
       if (Math.random() > 0.6) {
-        this.nextGrid[idx] =
-          target === ElementType.METAL || target === ElementType.WOOD
-            ? ElementType.SMOKE
-            : ElementType.EMPTY;
+        if (target === ElementType.METAL || target === ElementType.IRON || target === ElementType.COPPER) {
+           this.nextGrid[idx] = ElementType.HYDROGEN;
+        } else if (target === ElementType.WOOD || target === ElementType.PLANT || target === ElementType.MEAT) {
+           this.nextGrid[idx] = Math.random() > 0.5 ? ElementType.SMOKE : ElementType.POISON;
+        } else {
+           this.nextGrid[idx] = ElementType.EMPTY;
+        }
+        
         this.updated[idx] = true;
 
         // acid is consumed sometimes
@@ -663,6 +705,13 @@ export class SandboxEngine {
           }
         }
       }
+    } else if (target === ElementType.WATER) {
+       // Acid dilutes into water eventually
+       if (Math.random() > 0.95) {
+          const aIdx = this.getIndex(acidX, acidY);
+          this.nextGrid[aIdx] = ElementType.WATER;
+          this.updated[aIdx] = true;
+       }
     }
   }
 
@@ -679,12 +728,16 @@ export class SandboxEngine {
       const ny = y + dy;
       if (this.isInBounds(nx, ny)) {
         const target = this.grid[this.getIndex(nx, ny)];
-        if (target === ElementType.WATER || target === ElementType.ICE) {
-          this.nextGrid[this.getIndex(x, y)] = ElementType.STONE;
-          this.nextGrid[this.getIndex(nx, ny)] =
-            target === ElementType.WATER
-              ? ElementType.STEAM
-              : ElementType.WATER;
+        if (target === ElementType.WATER || target === ElementType.ICE || target === ElementType.LIQUID_NITROGEN) {
+          this.nextGrid[this.getIndex(x, y)] = Math.random() > 0.5 ? ElementType.OBSIDIAN : ElementType.STONE;
+          if (target !== ElementType.LIQUID_NITROGEN) {
+            this.nextGrid[this.getIndex(nx, ny)] =
+              target === ElementType.WATER
+                ? ElementType.STEAM
+                : ElementType.WATER;
+          } else {
+             this.nextGrid[this.getIndex(nx, ny)] = ElementType.CLOUD;
+          }
           this.updated[this.getIndex(x, y)] = true;
           this.updated[this.getIndex(nx, ny)] = true;
           return;
@@ -810,7 +863,7 @@ export class SandboxEngine {
       if (this.isInBounds(nx, ny)) {
         const t = this.grid[this.getIndex(nx, ny)];
         if (t === ElementType.WATER || t === ElementType.DIRT) {
-          if (Math.random() > 0.95) {
+          if (Math.random() > 0.98) {
             this.nextGrid[this.getIndex(x, y)] = ElementType.PLANT;
             this.updated[this.getIndex(x, y)] = true;
             return true;
@@ -847,6 +900,29 @@ export class SandboxEngine {
       ) {
         this.nextGrid[this.getIndex(nx, ny)] = ElementType.VIRUS;
         this.updated[this.getIndex(nx, ny)] = true;
+      }
+    }
+  }
+
+  processBacteria(x: number, y: number) {
+    if (Math.random() > 0.4) return;
+    const neighbors = [[0, 1], [0, -1], [1, 0], [-1, 0]];
+    const [dx, dy] = neighbors[Math.floor(Math.random() * 4)];
+    const nx = x + dx;
+    const ny = y + dy;
+    if (this.isInBounds(nx, ny)) {
+      const idx = this.getIndex(nx, ny);
+      const target = this.grid[idx];
+      const organics = [ElementType.MEAT, ElementType.BONE, ElementType.PLANT, ElementType.VINE, ElementType.WOOD, ElementType.SPORE, ElementType.FUNGUS, ElementType.BLOOD];
+      if (organics.includes(target as any)) {
+        this.nextGrid[idx] = ElementType.BACTERIA;
+        this.updated[idx] = true;
+      } else if (target === ElementType.VIRUS) {
+        // Virus and bacteria fight - virus wins usually
+        if (Math.random() > 0.8) {
+           this.nextGrid[this.getIndex(x, y)] = ElementType.VIRUS;
+           this.updated[this.getIndex(x, y)] = true;
+        }
       }
     }
   }
@@ -942,7 +1018,7 @@ export class SandboxEngine {
       if (this.isInBounds(nx, ny)) {
         const target = this.grid[this.getIndex(nx, ny)];
         if (target === ElementType.DIRT) {
-          if (Math.random() > 0.9) {
+          if (Math.random() > 0.98) {
             this.nextGrid[this.getIndex(nx, ny)] = ElementType.CLAY;
             this.nextGrid[this.getIndex(x, y)] = ElementType.EMPTY;
             this.updated[this.getIndex(nx, ny)] = true;
@@ -1014,6 +1090,43 @@ export class SandboxEngine {
           this.explode(nx, ny);
         } else if (t === ElementType.NUKE) {
           this.explode(nx, ny, 30);
+        }
+      }
+    }
+  }
+
+  processBlackHole(x: number, y: number) {
+    const radius = 5;
+    for (let dy = -radius; dy <= radius; dy++) {
+      for (let dx = -radius; dx <= radius; dx++) {
+        if (dx === 0 && dy === 0) continue;
+        const distSq = dx * dx + dy * dy;
+        if (distSq <= radius * radius) {
+          const nx = x + dx;
+          const ny = y + dy;
+          if (this.isInBounds(nx, ny)) {
+            const idx = this.getIndex(nx, ny);
+            const t = this.nextGrid[idx];
+            if (t !== ElementType.EMPTY && t !== ElementType.BLACK_HOLE && t !== ElementType.VOID) {
+              if (Math.random() > distSq / (radius * radius * 1.5)) {
+                // Suck it towards the black hole
+                const nx2 = nx - Math.sign(dx);
+                const ny2 = ny - Math.sign(dy);
+                if (this.isInBounds(nx2, ny2) && (nx2 !== x || ny2 !== y)) {
+                  if (this.nextGrid[this.getIndex(nx2, ny2)] === ElementType.EMPTY) {
+                    this.nextGrid[this.getIndex(nx2, ny2)] = t;
+                    this.nextGrid[idx] = ElementType.EMPTY;
+                    this.updated[this.getIndex(nx2, ny2)] = true;
+                    this.updated[idx] = true;
+                  }
+                } else if (nx2 === x && ny2 === y) {
+                  // Consumed
+                  this.nextGrid[idx] = ElementType.EMPTY;
+                  this.updated[idx] = true;
+                }
+              }
+            }
+          }
         }
       }
     }

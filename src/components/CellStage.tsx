@@ -1,7 +1,8 @@
 import React, { useRef, useEffect, useState, useCallback } from "react";
 import { motion, AnimatePresence } from "motion/react";
-import { Trophy, Activity } from "lucide-react";
+import { Trophy, Activity, RotateCcw } from "lucide-react";
 import { audioSystem } from "../lib/audio";
+import { Leaderboard } from "./Leaderboard";
 
 interface Entity {
   id: number;
@@ -24,7 +25,7 @@ const COLORS = {
 
 export function CellStage() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const [gameState, setGameState] = useState<'start' | 'playing' | 'gameover'>('start');
+  const [gameState, setGameState] = useState<'start' | 'playing' | 'gameover' | 'leaderboard'>('start');
   const [score, setScore] = useState(0);
   const [highScore, setHighScore] = useState(0);
   
@@ -41,7 +42,8 @@ export function CellStage() {
     isPointerDown: false,
     lastTime: 0,
     frameId: 0,
-    entityIdSeq: 0
+    entityIdSeq: 0,
+    score: 0
   });
 
   useEffect(() => {
@@ -183,89 +185,71 @@ export function CellStage() {
            const dy = st.targetY - height / 2;
            const dist = Math.hypot(dx, dy);
            if (dist > 0) {
-              const speedCap = Math.max(1, 5 - (p.radius * 0.02)); // Slower as it gets bigger
+              const speedCap = Math.max(1, 4 - (p.radius * 0.015)); // Adjusted speed
               const targetVx = (dx / dist) * speedCap;
               const targetVy = (dy / dist) * speedCap;
               p.vx += (targetVx - p.vx) * 0.1;
               p.vy += (targetVy - p.vy) * 0.1;
            }
         } else {
-           // Friction
            p.vx *= 0.95;
            p.vy *= 0.95;
         }
 
-        // Apply movement
         p.x += p.vx;
         p.y += p.vy;
 
-        // Bounds
         p.x = Math.max(p.radius, Math.min(st.worldSize - p.radius, p.x));
         p.y = Math.max(p.radius, Math.min(st.worldSize - p.radius, p.y));
 
-        // Camera follow
         st.camera.x += (p.x - width / 2 - st.camera.x) * 0.1;
         st.camera.y += (p.y - height / 2 - st.camera.y) * 0.1;
 
-        // Update Food
         for (let i = st.foods.length - 1; i >= 0; i--) {
            const f = st.foods[i];
            f.x += f.vx;
            f.y += f.vy;
-           
-           // Bounce off walls
            if (f.x < 0 || f.x > st.worldSize) f.vx *= -1;
            if (f.y < 0 || f.y > st.worldSize) f.vy *= -1;
 
-           // Player eats food
            const dx = p.x - f.x;
            const dy = p.y - f.y;
            const dist = Math.hypot(dx, dy);
            if (dist < p.radius + f.radius) {
-              // Eat!
               st.foods.splice(i, 1);
-              p.radius += 0.5; // Grow
+              p.radius += 0.5;
               p.mass += 1;
-              setScore(Math.floor(p.mass));
-              if (Math.random() > 0.5) spawnFood(); // Respawn
+              st.score = Math.floor(p.mass);
+              setScore(st.score);
+              if (Math.random() > 0.5) spawnFood();
               if (Math.random() > 0.8) audioSystem.playClick();
            }
         }
 
-        // Update Enemies
         for (let i = st.enemies.length - 1; i >= 0; i--) {
             const e = st.enemies[i];
-            
-            // Basic AI
             const dx = p.x - e.x;
             const dy = p.y - e.y;
             const dist = Math.hypot(dx, dy);
 
-            // Change target occasionally
             if (Math.random() < 0.02 || !e.targetX) {
                if (dist < 400) {
-                  // Interact with player
                   if (e.radius > p.radius * 1.1) {
-                     // Chase
                      e.targetX = p.x;
                      e.targetY = p.y;
                   } else if (p.radius > e.radius * 1.1) {
-                     // Flee
                      e.targetX = e.x - dx;
                      e.targetY = e.y - dy;
                   } else {
-                     // Ignore
                      e.targetX = e.x + (Math.random() - 0.5) * 200;
                      e.targetY = e.y + (Math.random() - 0.5) * 200;
                   }
                } else {
-                  // Wander
                   e.targetX = e.x + (Math.random() - 0.5) * 300;
                   e.targetY = e.y + (Math.random() - 0.5) * 300;
                }
             }
 
-            // Move towards target
             if (e.targetX !== undefined && e.targetY !== undefined) {
                const tx = e.targetX - e.x;
                const ty = e.targetY - e.y;
@@ -280,48 +264,41 @@ export function CellStage() {
             e.x += e.vx;
             e.y += e.vy;
 
-            // Bounds
             e.x = Math.max(e.radius, Math.min(st.worldSize - e.radius, e.x));
             e.y = Math.max(e.radius, Math.min(st.worldSize - e.radius, e.y));
 
-            // Collision with player
             if (dist < p.radius + e.radius - Math.min(p.radius, e.radius) * 0.3) {
                if (p.radius > e.radius * 1.1) {
-                  // Player eats enemy
                   st.enemies.splice(i, 1);
                   p.radius += e.radius * 0.2;
                   p.mass += Math.floor(e.radius);
-                  setScore(Math.floor(p.mass));
+                  st.score = Math.floor(p.mass);
+                  setScore(st.score);
                   audioSystem.playPop();
                   spawnEnemy();
                } else if (e.radius > p.radius * 1.1) {
-                  // Enemy eats player
                   endGame();
                   return;
                }
             }
         }
 
-        // Maintain populations
         if (Math.random() < 0.05) spawnFood();
         if (Math.random() < 0.01) spawnEnemy();
       }
 
-      // Draw
-      ctx.fillStyle = '#020617'; // slate-950
+      ctx.fillStyle = '#020617';
       ctx.fillRect(0, 0, canvas.width, canvas.height);
 
       ctx.save();
-      const cx = gameState === 'playing' || gameState === 'gameover' ? -st.camera.x : 0;
-      const cy = gameState === 'playing' || gameState === 'gameover' ? -st.camera.y : 0;
+      const cx = gameState !== 'start' ? -st.camera.x : 0;
+      const cy = gameState !== 'start' ? -st.camera.y : 0;
       ctx.translate(cx, cy);
 
-      // Draw world bounds
       ctx.strokeStyle = 'rgba(255, 255, 255, 0.1)';
       ctx.lineWidth = 10;
       ctx.strokeRect(0, 0, st.worldSize, st.worldSize);
 
-      // Draw Grid background
       const gridSize = 100;
       ctx.strokeStyle = 'rgba(255, 255, 255, 0.03)';
       ctx.lineWidth = 1;
@@ -330,13 +307,11 @@ export function CellStage() {
       for(let y=0; y<=st.worldSize; y+=gridSize) { ctx.moveTo(0, y); ctx.lineTo(st.worldSize, y); }
       ctx.stroke();
 
-      // Viewport culling bounds
       const viewLeft = -cx;
       const viewRight = -cx + canvas.width;
       const viewTop = -cy;
       const viewBottom = -cy + canvas.height;
 
-      // Draw Foods
       for (const f of st.foods) {
          if (f.x + f.radius < viewLeft || f.x - f.radius > viewRight || f.y + f.radius < viewTop || f.y - f.radius > viewBottom) continue;
          ctx.beginPath();
@@ -348,36 +323,31 @@ export function CellStage() {
          ctx.fill();
       }
 
-      // Draw Enemies
       for (const e of st.enemies) {
          if (e.x + e.radius < viewLeft || e.x - e.radius > viewRight || e.y + e.radius < viewTop || e.y - e.radius > viewBottom) continue;
          drawFluidCell(ctx, e.x, e.y, e.radius, e.color, timestamp, false);
       }
 
-      // Draw Player
       if (gameState === 'playing') {
          drawFluidCell(ctx, st.player.x, st.player.y, st.player.radius, st.player.color, timestamp, true);
-      } else if (gameState === 'gameover') {
-         // Draw remnants
+      } else if (gameState === 'gameover' || gameState === 'leaderboard') {
          ctx.beginPath();
          ctx.arc(st.player.x, st.player.y, st.player.radius, 0, Math.PI * 2);
-         ctx.fillStyle = 'rgba(239, 68, 68, 0.5)'; // Red splat
+         ctx.fillStyle = 'rgba(239, 68, 68, 0.5)';
          ctx.fill();
       }
 
       ctx.restore();
-      
       animationFrameId = requestAnimationFrame(gameLoop);
     };
     
     animationFrameId = requestAnimationFrame(gameLoop);
-
     return () => cancelAnimationFrame(animationFrameId);
   }, [gameState, spawnFood, spawnEnemy]);
 
   const handlePointerDown = (e: React.PointerEvent) => {
     const canvas = canvasRef.current;
-    if (!canvas) return;
+    if (!canvas || gameState !== 'playing') return;
     const rect = canvas.getBoundingClientRect();
     stateRef.current.isPointerDown = true;
     stateRef.current.targetX = e.clientX - rect.left;
@@ -386,7 +356,7 @@ export function CellStage() {
 
   const handlePointerMove = (e: React.PointerEvent) => {
     const canvas = canvasRef.current;
-    if (!canvas) return;
+    if (!canvas || gameState !== 'playing') return;
     const rect = canvas.getBoundingClientRect();
     if (stateRef.current.isPointerDown || e.pointerType === 'mouse') {
         stateRef.current.targetX = e.clientX - rect.left;
@@ -408,12 +378,12 @@ export function CellStage() {
   };
 
   return (
-    <div className="w-full h-full flex flex-col items-center justify-center bg-slate-950 p-4 select-none lg:flex-row lg:items-start lg:pt-24 lg:justify-center lg:gap-12 overflow-hidden touch-none">
+    <div className="w-full h-full flex flex-col items-center justify-center bg-slate-950 select-none lg:flex-row lg:items-start lg:pt-20 lg:justify-center lg:gap-12 overflow-hidden touch-none relative">
       
       {/* Side Score HUD for Desktop */}
-      <div className="hidden lg:flex w-64 flex-col gap-6">
+      <div className="hidden lg:flex w-64 flex-col gap-6 mt-4">
         <div className="p-6 bg-slate-900 border border-slate-800 rounded-3xl shadow-xl">
-           <p className="text-slate-500 font-bold uppercase tracking-widest text-xs mb-2">Massa</p>
+           <p className="text-slate-500 font-bold uppercase tracking-widest text-xs mb-2">Massa Bio</p>
            <p className="text-5xl font-black text-white">{score}</p>
         </div>
         <div className="p-6 bg-slate-900/50 border border-slate-800/50 rounded-3xl flex flex-col gap-4">
@@ -424,14 +394,9 @@ export function CellStage() {
              <p className="text-3xl font-bold text-slate-300">{highScore}</p>
            </div>
         </div>
-        <div className="p-6 bg-slate-900/50 border border-slate-800/50 rounded-3xl flex flex-col gap-2 text-slate-400 text-sm font-medium">
-           <p>Toque ou segure na tela para mover sua célula.</p>
-           <p className="text-emerald-400">Coma pontos menores para crescer.</p>
-           <p className="text-rose-400">Evite células maiores!</p>
-        </div>
       </div>
 
-      <div className="w-full max-w-4xl relative flex flex-col items-center flex-1 h-full max-h-[800px]">
+      <div className="w-full max-w-4xl relative flex flex-col items-center flex-1 h-full max-h-[850px] p-4">
         
         {/* Mobile HUD */}
         <div className="lg:hidden flex justify-between w-full mb-4 items-center bg-slate-900 p-4 rounded-2xl border border-slate-800 z-10 shrink-0">
@@ -485,23 +450,49 @@ export function CellStage() {
                     <motion.div 
                         initial={{ opacity: 0, scale: 0.9 }}
                         animate={{ opacity: 1, scale: 1 }}
-                        className="absolute inset-0 bg-rose-950/90 backdrop-blur-md flex flex-col items-center justify-center p-6 text-center"
+                        exit={{ opacity: 0 }}
+                        className="absolute inset-0 bg-rose-950/90 backdrop-blur-md flex flex-col items-center justify-center p-6 text-center overflow-y-auto"
                     >
-                        <h2 className="text-5xl font-black text-white mb-2 uppercase tracking-tighter">Você foi Devorado!</h2>
-                        <p className="text-rose-200 text-lg mb-8 font-medium">Sua linhagem terminou aqui.</p>
+                        <h2 className="text-4xl sm:text-5xl font-black text-white mb-2 uppercase tracking-tighter">Você foi Devorado!</h2>
+                        <p className="text-rose-200 text-lg mb-6 font-medium">Sua linhagem terminou aqui.</p>
                         
-                        <div className="bg-rose-900/50 border border-rose-800 rounded-3xl p-6 mb-8 min-w-[250px]">
+                        <div className="bg-rose-900/50 border border-rose-800 rounded-3xl p-6 mb-8 min-w-[220px]">
                             <p className="text-rose-300 text-sm font-bold uppercase tracking-widest mb-1">Massa Final</p>
                             <p className="text-5xl font-black text-white">{score}</p>
                         </div>
 
-                        <button
-                            onClick={startGame}
-                            className="bg-rose-500 hover:bg-rose-400 text-white px-10 py-5 rounded-full font-black text-xl uppercase tracking-widest shadow-[0_0_30px_rgba(244,63,94,0.3)] hover:scale-105 active:scale-95 transition-all"
-                        >
-                            TENTAR NOVAMENTE
-                        </button>
+                        <div className="flex flex-col sm:flex-row gap-4">
+                            <button
+                                onClick={startGame}
+                                className="bg-rose-500 hover:bg-rose-400 text-white px-10 py-5 rounded-full font-black text-lg uppercase tracking-widest shadow-[0_0_30px_rgba(244,63,94,0.3)] hover:scale-105 active:scale-95 transition-all flex items-center gap-2"
+                            >
+                                <RotateCcw size={20} /> REPETIR
+                            </button>
+                            <button
+                                onClick={() => setGameState('leaderboard')}
+                                className="bg-white text-rose-900 px-10 py-5 rounded-full font-black text-lg uppercase tracking-widest hover:bg-slate-100 transition-all flex items-center gap-2"
+                            >
+                                <Trophy size={20} /> RANK GLOBAL
+                            </button>
+                        </div>
                     </motion.div>
+                )}
+
+                {gameState === 'leaderboard' && (
+                  <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    className="absolute inset-0 bg-slate-950/90 backdrop-blur-xl flex items-center justify-center p-4 z-50 overflow-y-auto"
+                  >
+                     <Leaderboard 
+                        gameId="cell-evolution"
+                        gameName="Evolução Celular"
+                        currentScore={score}
+                        unit="Massa"
+                        onClose={() => setGameState('gameover')}
+                     />
+                  </motion.div>
                 )}
             </AnimatePresence>
         </div>

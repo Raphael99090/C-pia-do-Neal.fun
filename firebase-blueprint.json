@@ -43,6 +43,19 @@
         "createdAt": { "type": "string", "format": "date-time" }
       },
       "required": ["title", "scenario", "optionA", "optionB"]
+    },
+    "LeaderboardEntry": {
+      "title": "Leaderboard Entry",
+      "description": "A score entry for a specific game.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "username": { "type": "string" },
+        "score": { "type": "number" },
+        "gameId": { "type": "string" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "username", "score", "gameId", "updatedAt"]
     }
   },
   "firestore": {
@@ -57,6 +70,10 @@
     "/moral_dilemmas/{dilemmaId}": {
       "schema": "MoralDilemma",
       "description": "Shared pool of moral dilemmas."
+    },
+    "/leaderboards/{gameId}/scores/{userId}": {
+      "schema": "LeaderboardEntry",
+      "description": "Global rankings for each game."
     }
   }
 }

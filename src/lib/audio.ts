@@ -2,24 +2,14 @@ export class AudioManager {
   private ctx: AudioContext | null = null;
   private compressor: DynamicsCompressorNode | null = null;
   private masterGain: GainNode | null = null;
-  private bgmGain: GainNode | null = null;
 
   private isMuted: boolean = true; 
-  private timerID: any = null;
-  private nextAmbientTime = 0.0;
   private lastElementSoundTime = 0;
-
-  // Pentatonic scale for relaxing generative BGM: C major pentatonic (C, D, E, G, A)
-  private ambientNotes = [
-    130.81, 164.81, 196.00, // C3, E3, G3
-    261.63, 293.66, 329.63, 392.00, 440.00, // C4, D4, E4, G4, A4
-    523.25, 587.33, 659.25, // C5, D5, E5
-  ];
 
   public init() {
     if (!this.ctx) {
       this.ctx = new (window.AudioContext || (window as any).webkitAudioContext)();
-      
+
       // Prevent audio clipping (estouro) with a compressor
       this.compressor = this.ctx.createDynamicsCompressor();
       this.compressor.threshold.value = -24;
@@ -28,13 +18,9 @@ export class AudioManager {
       this.compressor.attack.value = 0.003;
       this.compressor.release.value = 0.25;
 
-      this.bgmGain = this.ctx.createGain();
-      this.bgmGain.gain.value = this.isMuted ? 0 : 1;
-
       this.masterGain = this.ctx.createGain();
       this.masterGain.gain.value = 0.5; // Soft overall volume
 
-      this.bgmGain.connect(this.compressor);
       this.compressor.connect(this.masterGain);
       this.masterGain.connect(this.ctx.destination);
     }
@@ -46,11 +32,6 @@ export class AudioManager {
   public toggleMute() {
     this.init();
     this.isMuted = !this.isMuted;
-    if (!this.isMuted) {
-      this.startBGM();
-    } else {
-      this.stopBGM();
-    }
     return this.isMuted;
   }
 
@@ -96,6 +77,10 @@ export class AudioManager {
     this.playTone(440, 'sine', 0.02, 0.05, 0.1);
     setTimeout(() => this.playTone(554, 'sine', 0.02, 0.05, 0.1), 100); 
     setTimeout(() => this.playTone(659, 'sine', 0.02, 0.05, 0.2), 200); 
+  }
+
+  public playHit() {
+    this.playNoise(0.01, 0.1, 0.1, 'lowpass', 800);
   }
 
   public playError() {
@@ -257,92 +242,6 @@ export class AudioManager {
           gain.connect(this.compressor);
           noise.start(now);
       } catch (e) {}
-  }
-
-  // Generative Ambient Scheduler for calm/relaxing BGM
-  private ambientScheduler() {
-      if (!this.ctx || this.isMuted) return;
-      
-      while (this.nextAmbientTime < this.ctx.currentTime + 0.5) {
-          if (Math.random() > 0.4) { 
-              const note = this.ambientNotes[Math.floor(Math.random() * this.ambientNotes.length)];
-              const isDrone = note < 200;
-              const type: OscillatorType = isDrone ? 'triangle' : 'sine';
-              const attack = isDrone ? 3 : 1 + Math.random() * 2;
-              const release = isDrone ? 4 : 2 + Math.random() * 3;
-              const vol = isDrone ? 0.05 : 0.02; // Very soft volume
-              
-              this.playSynth(note, type, vol, attack, release, this.nextAmbientTime, true);
-          }
-          
-          // Next note between 0.5s and 2s
-          this.nextAmbientTime += 0.5 + Math.random() * 1.5;
-      }
-      
-      this.timerID = setTimeout(() => this.ambientScheduler(), 100);
-  }
-
-  private playSynth(freq: number, type: OscillatorType, vol: number, attack: number, release: number, time: number, withDelay: boolean = false) {
-      if (!this.ctx || !this.bgmGain) return;
-      try {
-          const osc = this.ctx.createOscillator();
-          const gain = this.ctx.createGain();
-          const filter = this.ctx.createBiquadFilter();
-
-          osc.type = type;
-          osc.frequency.setValueAtTime(freq, time);
-
-          // Gentle lowpass to keep it soft
-          filter.type = 'lowpass';
-          filter.frequency.setValueAtTime(freq * 3, time);
-
-          gain.gain.setValueAtTime(0, time);
-          gain.gain.linearRampToValueAtTime(vol, time + attack);
-          gain.gain.setValueAtTime(vol, time + attack + 0.5); 
-          gain.gain.linearRampToValueAtTime(0.001, time + attack + 0.5 + release);
-
-          osc.connect(filter);
-          filter.connect(gain);
-          gain.connect(this.bgmGain);
-
-          if (withDelay) {
-              const delay = this.ctx.createDelay();
-              const feedback = this.ctx.createGain();
-              delay.delayTime.value = 0.4; // lovely echo
-              feedback.gain.value = 0.3; 
-              
-              filter.connect(delay);
-              delay.connect(feedback);
-              feedback.connect(delay);
-              delay.connect(this.bgmGain);
-          }
-
-          osc.start(time);
-          osc.stop(time + attack + 0.5 + release + (withDelay ? 2 : 0));
-      } catch (e) {}
-  }
-
-  private startBGM() {
-     if (!this.ctx) return;
-     if (this.timerID) clearTimeout(this.timerID);
-     
-     if (this.bgmGain) {
-         this.bgmGain.gain.cancelScheduledValues(this.ctx.currentTime);
-         this.bgmGain.gain.setValueAtTime(this.bgmGain.gain.value, this.ctx.currentTime);
-         this.bgmGain.gain.linearRampToValueAtTime(1.0, this.ctx.currentTime + 0.5);
-     }
-     
-     this.nextAmbientTime = this.ctx.currentTime + 0.2;
-     this.ambientScheduler();
-  }
-
-  private stopBGM() {
-     if (this.timerID) clearTimeout(this.timerID);
-     if (this.ctx && this.bgmGain) {
-         this.bgmGain.gain.cancelScheduledValues(this.ctx.currentTime);
-         this.bgmGain.gain.setValueAtTime(this.bgmGain.gain.value, this.ctx.currentTime);
-         this.bgmGain.gain.linearRampToValueAtTime(0, this.ctx.currentTime + 0.5);
-     }
   }
 }
 

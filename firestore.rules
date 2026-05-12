@@ -40,6 +40,17 @@ service cloud.firestore {
         request.resource.data.scenario is string;
     }
 
+    // Leaderboards: Global scores for games
+    match /leaderboards/{gameId}/scores/{userId} {
+      allow read: if true;
+      allow write: if isSignedIn() && request.auth.uid == userId &&
+        request.resource.data.userId == request.auth.uid &&
+        request.resource.data.score is number &&
+        request.resource.data.gameId == gameId &&
+        request.resource.data.username is string &&
+        request.resource.data.username.size() <= 32;
+    }
+
     // Default deny
     match /{document=**} {
       allow read, write: if false;

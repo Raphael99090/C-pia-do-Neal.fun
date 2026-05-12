@@ -26,7 +26,11 @@ import {
   onSnapshot 
 } from "firebase/firestore";
 
-const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+const getAI = () => {
+  const key = process.env.GEMINI_API_KEY;
+  if (!key) return null;
+  return new GoogleGenAI({ apiKey: key });
+};
 
 type ElementDef = {
   id: string;
@@ -41,7 +45,9 @@ export function AlchemyGame() {
   const [allElements, setAllElements] = useState<Record<string, ElementDef>>(
     () => {
       const saved = localStorage.getItem("alchemyElements");
-      if (saved) return JSON.parse(saved);
+      if (saved) {
+        return { ...PREDEFINED_ELEMENTS, ...JSON.parse(saved) };
+      }
       return PREDEFINED_ELEMENTS;
     },
   );
@@ -66,7 +72,7 @@ export function AlchemyGame() {
   useEffect(() => {
     onAuthStateChanged(auth, (user) => {
       if (!user) {
-        signInAnonymously(auth).catch(console.error);
+        signInAnonymously(auth).catch(() => { /* ignore auth error if not enabled */ });
       }
     });
 
@@ -88,45 +94,31 @@ export function AlchemyGame() {
     localStorage.setItem("alchemyElements", JSON.stringify(allElements));
     localStorage.setItem("alchemyUnlocked", JSON.stringify(unlocked));
     localStorage.setItem("alchemyRecipes", JSON.stringify(recipes));
+    
+    if (unlocked.length >= 30) {
+      import("../lib/achievements").then(m => m.unlockAchievement('creator'));
+    }
   }, [allElements, unlocked, recipes]);
 
   const generateCombination = async (el1Id: string, el2Id: string) => {
     const el1 = allElements[el1Id].name;
     const el2 = allElements[el2Id].name;
 
-    const prompt = `Você é um mestre alquimista. Combine estes dois elementos para criar um novo elemento, como no jogo Infinite Craft.
-Elementos para combinar: "${el1}" e "${el2}"
-Seja criativo, engraçado ou lógico. O resultado deve ser em PORTUGUÊS.
-Retorne APENAS um objeto JSON válido com os campos:
-- name: (uma string curta, título capitalizado)
-- icon: (um único emoji representando-o)
-- color: (uma classe Tailwind CSS de cor de fundo e cor de texto, ex: "bg-emerald-500 text-white". Garanta que o texto seja legível contra o fundo.)`;
+    const prompt = `Você é um mestre alquimista. Combine estes dois elementos para criar um novo elemento, como no jogo Infinite Craft.\nElementos para combinar: "${el1}" e "${el2}"\nSeja criativo, engraçado ou lógico. O resultado deve ser em PORTUGUÊS.\nRetorne APENAS um objeto JSON válido com os campos:\n- name: (uma string curta, título capitalizado)\n- icon: (um único emoji representando-o)\n- color: (uma classe Tailwind CSS de cor de fundo e cor de texto, ex: "bg-emerald-500 text-white". Garanta que o texto seja legível contra o fundo.)`;
 
     try {
-      const response = await ai.models.generateContent({
-        model: "gemini-2.5-flash-8b",
-        contents: prompt,
-        config: {
-          responseMimeType: "application/json",
-          responseSchema: {
-            type: Type.OBJECT,
-            properties: {
-              name: { type: Type.STRING },
-              icon: { type: Type.STRING },
-              color: { type: Type.STRING },
-            },
-            required: ["name", "icon", "color"],
-          },
-        },
+      const response = await fetch("/api/alchemy/combine", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ prompt }),
       });
 
-      const text = response.text?.trim();
-      if (!text) return null;
-      
-      // Clean potential markdown artifacts just in case
-      const jsonStr = text.startsWith("```") ? text.replace(/^```json\n?/, "").replace(/\n?```$/, "") : text;
-      
-      return JSON.parse(jsonStr) as { name: string; icon: string; color: string };
+      if (!response.ok) {
+        throw new Error(`API error: ${response.statusText}`);
+      }
+
+      const data = await response.json();
+      return data as { name: string; icon: string; color: string };
     } catch (err: any) {
       console.error("Erro na Alquimia:", err);
       if (err.message?.includes("429") || err.message?.includes("quota")) {
@@ -236,6 +228,9 @@ Retorne APENAS um objeto JSON válido com os campos:
 
             if (!unlocked.includes(resultId)) {
               setUnlocked((prev) => [...prev, resultId]);
+              if (['vida', 'frankenstein', 'monstro', 'humano', 'vivo', 'animal', 'criatura', 'alien', 'zumbi', 'life', 'monster'].some(w => result.name.toLowerCase().includes(w))) {
+                import("../lib/achievements").then(m => m.unlockAchievement('dr_frankenstein'));
+              }
             }
 
             setLastDiscovered(resultId);
